@@ -1,62 +1,81 @@
+"use client"
+
+
 import type { RouteDetails as RouteDetailsType } from "../pages/tenant/types/route"
 import { Download, Filter } from "lucide-react"
+import { useState } from "react"
 
 interface RouteDetailsProps {
   routeDetails: RouteDetailsType
 }
 
 export default function RouteDetails({ routeDetails }: RouteDetailsProps) {
-  const { ticketsSold, totalTickets, ticketsAvailable } = routeDetails
+   const [passengerFilter, setPassengerFilter] = useState<string>("all")
+
+   // Count only confirmed passengers for ticket calculations
+   const confirmedPassengers = routeDetails.passengers.filter((p) => p.status === "confirmed")
+   const ticketsSold = confirmedPassengers.length
+   const { totalTickets } = routeDetails
+   const ticketsAvailable = totalTickets - ticketsSold
   const soldPercentage = (ticketsSold / totalTickets) * 100
+
+    // Filter passengers based on selected filter
+    const filteredPassengers =
+    passengerFilter === "all"
+      ? routeDetails.passengers
+      : routeDetails.passengers.filter((p) => p.status === passengerFilter)
+
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="p-6">
+      <div className="px-6 py-2">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-medium">{routeDetails.drivers[0]?.name ? `Hawassa to Addis Ababa` : ""}</h2>
+        <h2 className="text-xl font-medium">
+            {routeDetails.from} to {routeDetails.to}
+          </h2>
           <span className="text-[#e9d758] font-medium">{routeDetails.price}</span>
         </div>
 
         <div className="flex gap-8 mb-6">
           {routeDetails.drivers.map((driver, index) => (
             <div key={index} className="flex items-center gap-3">
-              <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-700">
+              <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-700">
                 <img src={driver.image || "/placeholder.svg"} alt={driver.name}  className="object-cover" />
               </div>
               <div>
-                <p className="font-medium">{driver.name}</p>
+                <p className="font-normal ">{driver.name}</p>
                 <p className="text-xs text-gray-400">Driver/Assistant</p>
-                <p className="text-xs text-gray-400">{driver.phone}</p>
+                
               </div>
             </div>
           ))}
         </div>
 
-        <div className="border-t border-gray-800 pt-6">
+        <div className="border-t border-gray-800 pt-2">
           <div className="grid grid-cols-6 gap-4 mb-6">
             <div>
-              <p className="text-sm text-gray-400">route ID</p>
-              <p className="font-medium">{routeDetails.routeId}</p>
+              <p className="text-[10px] text-gray-400">route ID</p>
+              <p className="font-light text-xs">{routeDetails.routeId}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-400">Side No_</p>
-              <p className="font-medium">{routeDetails.sideNo}</p>
+              <p className="text-[10px] text-gray-400">Side No_</p>
+              <p className="font-light text-xs">{routeDetails.sideNo}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-400">ETA</p>
-              <p className="font-medium">{routeDetails.eta}</p>
+              <p className="text-[10px] text-gray-400">ETA</p>
+              <p className="font-light text-xs">{routeDetails.eta}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-400">Departure Time</p>
-              <p className="font-medium">{routeDetails.departureTime}</p>
+              <p className="text-[10px] text-gray-400">Departure Time</p>
+              <p className="font-light text-xs text-[#e9d758]">{routeDetails.departureTime}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-400">Arrival Time</p>
-              <p className="font-medium">{routeDetails.arrivalTime}</p>
+              <p className="text-[10px] text-gray-400">Arrival Time</p>
+              <p className="font-light text-xs">{routeDetails.arrivalTime}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-400">Distance(KM)</p>
-              <p className="font-medium">{routeDetails.distance}</p>
+              <p className="text-[10px] text-gray-400">Distance(KM)</p>
+              <p className="font-light text-xs">{routeDetails.distance}</p>
             </div>
           </div>
 
@@ -117,21 +136,35 @@ export default function RouteDetails({ routeDetails }: RouteDetailsProps) {
             <div className="flex justify-between items-center mb-2">
               <div>
                 <h3 className="font-medium">Passenger lists</h3>
-                <p className="text-sm text-gray-400">Hawassa to addis ababa</p>
+                <p className="text-sm text-gray-400">
+                  {routeDetails.from} to {routeDetails.to}
+                </p>
               </div>
               <div className="flex gap-2">
                 <button className="flex items-center gap-1 px-3 py-1.5 border border-[#e9d758] text-[#e9d758] rounded-md text-sm">
                   <Download size={16} />
                   Export
                 </button>
-                <button className="flex items-center gap-1 px-3 py-1.5 border border-[#e9d758] text-[#e9d758] rounded-md text-sm">
-                  <Filter size={16} />
-                  Confirmed
-                </button>
+                <div className="relative">
+                  <select
+                    value={passengerFilter}
+                    onChange={(e) => setPassengerFilter(e.target.value)}
+                    className="appearance-none flex items-center gap-1 px-3 py-1.5 border border-[#e9d758] text-[#e9d758] rounded-md text-sm bg-transparent pr-8"
+                  >
+                    <option value="all">All</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="pending">Pending</option>
+                    <option value="canceled">Canceled</option>
+                  </select>
+                  <Filter
+                    size={16}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none"
+                  />
+                </div>
               </div>
             </div>
 
-            <PassengerTable passengers={routeDetails.passengers} />
+            <PassengerTable passengers={filteredPassengers} />
           </div>
         </div>
       </div>
@@ -166,7 +199,8 @@ function PassengerTable({ passengers }: PassengerTableProps) {
           </tr>
         </thead>
         <tbody>
-          {passengers.map((passenger, index) => (
+        {passengers.length > 0 ? (
+            passengers.map((passenger, index) => (
             <tr key={index} className="border-t border-gray-800 hover:bg-gray-800 cursor-pointer">
               <td className="py-3">
                 <input type="checkbox" className="rounded bg-gray-700 border-gray-600" />
@@ -176,12 +210,27 @@ function PassengerTable({ passengers }: PassengerTableProps) {
               <td className="py-3">{passenger.scale}</td>
               <td className="py-3">{passenger.phone}</td>
               <td className="py-3">
-                <span className="px-3 py-1 bg-[#e9d758] bg-opacity-20 text-[#131208] rounded-md text-xs">
+              <span
+                    className={`px-3 py-1 rounded-md text-xs ${
+                      passenger.status === "confirmed"
+                        ? "bg-[#e9d758] bg-opacity-20 text-[#e9d758]"
+                        : passenger.status === "pending"
+                          ? "bg-blue-500 bg-opacity-20 text-blue-500"
+                          : "bg-red-500 bg-opacity-20 text-red-500"
+                    }`}
+                  >
                   {passenger.status}
-                </span>
+                  </span>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={6} className="py-4 text-center text-gray-400">
+                No passengers found with the selected filter
               </td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
     </div>

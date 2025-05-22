@@ -26,8 +26,8 @@ export function TopNav() {
   const { user, logout } = useAuth();
 
   return (
-    <header className='sticky top-0 z-40 border-b bg-background w-[105%]'>
-      <div className='container flex h-16 items-center justify-between px-4 md:px-6'>
+    <header className='sticky top-0 z-40 border-b bg-background '>
+      <div className='flex h-16 items-center justify-between px-4 md:px-6 '>
         <div className='hidden md:block'>
           <nav className='flex items-center space-x-2'>
             <Link to='/' className='text-sm font-medium'>

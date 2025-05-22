@@ -6,9 +6,13 @@ interface RouteListProps {
   routes: Route[]
   activeTab: string
   setActiveTab: (tab: string) => void
+  onSelectRoute: (id: string) => void
 }
 
-export default function RouteList({ routes, activeTab, setActiveTab }: RouteListProps) {
+export default function RouteList({ routes, activeTab, setActiveTab, onSelectRoute }: RouteListProps) {
+   // Filter routes based on active tab
+   const filteredRoutes = activeTab === "all" ? routes : routes.filter((route) => route.status === activeTab)
+ 
   return (
     <div className="w-[380px] border-r border-gray-900 overflow-y-auto">
       <div className="flex border-b border-gray-800 gap-2">
@@ -47,8 +51,8 @@ export default function RouteList({ routes, activeTab, setActiveTab }: RouteList
       </div>
 
       <div className="divide-y divide-gray-800">
-        {routes.map((route, index) => (
-          <RouteCard key={index} route={route} />
+      {filteredRoutes.map((route) => (
+          <RouteCard key={route.id} route={route} onSelect={() => onSelectRoute(route.id)} />
         ))}
       </div>
     </div>
@@ -56,17 +60,23 @@ export default function RouteList({ routes, activeTab, setActiveTab }: RouteList
 }
 
 interface RouteCardProps {
-  route: Route
-}
+   route: Route
+   onSelect: () => void
+ }
 
-function RouteCard({ route }: RouteCardProps) {
+function RouteCard({ route, onSelect }: RouteCardProps) {
   return (
-    <div className={`p-4 flex justify-between items-center ${route.selected ? "border-l-4 border-[#e9d758]" : ""}`}>
+   <div
+   className={`p-4 flex justify-between items-center cursor-pointer hover:bg-gray-800 ${
+     route.selected ? "border-l-4 border-[#e9d758]" : ""
+   }`}
+   onClick={onSelect}
+ >
       <div>
         <h3 className="font-medium">
           {route.from} to {route.to}
         </h3>
-        <p className="text-sm text-gray-400">routeID {route.id}</p>
+        <p className="text-sm text-gray-400">routeID {route.routeId}</p>
       </div>
 
       {route.status === "on-the-way" && (

@@ -47,7 +47,7 @@ const mockUsers: User[] = [
     id: "1",
     name: "System Admin",
     email: "admin@addisbus.com",
-    companyName: "Selam Bus",
+    companyName: "ADDIS Bus",
     role: "system_admin",
     avatar: "/placeholder.svg?height=40&width=40",
   },

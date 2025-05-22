@@ -45,12 +45,12 @@ const ProtectedRoute = ({
 
 const MainLayout = () => {
   return (
-    <div className='min-h-screen flex'>
+    <div className='min-h-screen flex w-[100%] '>
       <Sidebar children={undefined} />
-      <div className='flex-1'>
+      <div className='flex flex-col'>
         <TopNav />
-        <div className='container mx-auto p-6 max-w-7xl'>
-          <main className='w-full'>
+        <div className='mx-auto p-6'>
+          <main className=''>
             <Outlet /> {/* This renders the matched child route */}
           </main>
         </div>
