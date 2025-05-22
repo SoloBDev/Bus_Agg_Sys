@@ -1,0 +1,151 @@
+"use client";
+
+import React from "react";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "./context/auth-context";
+import { ThemeProvider } from "./components/theme-provider";
+import { Sidebar } from "./components/sidebar";
+import { TopNav } from "./components/top-nav";
+import { TooltipProvider } from "./components/ui/tooltip";
+import { Toaster } from "./components/ui/sonner";
+
+// Import all your pages as before...
+import HomePage from "./pages/home";
+import LoginPage from "./pages/login";
+import { SettingsProvider } from "./context/settings-context";
+import SignupPage from "./pages/signup";
+import AdminDashboardPage from "./pages/admin/dashboard";
+import TenantDashboardPage from "./pages/tenant/dashboard";
+import OperatorDashboardPage from "./pages/operator/dashboard";
+import Registration from "./pages/register";
+import AnalyticsDashboardPage from "./pages/tenant/tenant-analytics";
+import BusesPage from "./pages/tenant/buses";
+import BusRouteManagement from "./pages/tenant/bus-route-management";
+// ... (keep all your other page imports)
+
+const ProtectedRoute = ({
+  children,
+  allowedRoles,
+}: {
+  children: React.ReactNode;
+  allowedRoles: string[];
+}) => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user || !allowedRoles.includes(user.role)) {
+    return <Navigate to='/login' replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const MainLayout = () => {
+  return (
+    <div className='min-h-screen flex'>
+      <Sidebar children={undefined} />
+      <div className='flex-1'>
+        <TopNav />
+        <div className='container mx-auto p-6 max-w-7xl'>
+          <main className='w-full'>
+            <Outlet /> {/* This renders the matched child route */}
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+function App() {
+  return (
+    <ThemeProvider defaultTheme='dark'>
+      <SettingsProvider>
+        <TooltipProvider delayDuration={0}>
+          <Routes>
+            {/* Public routes without layout */}
+            <Route path='/' element={<HomePage />} />
+            <Route path='/login' element={<LoginPage />} />
+            <Route path='/signup' element={<SignupPage />} />
+            <Route path='/register' element={<Registration />} />
+
+            {/* Protected routes with layout */}
+            <Route
+              element={
+                <ProtectedRoute
+                  allowedRoles={["system_admin", "tenant_admin", "operator"]}
+                >
+                  <MainLayout />
+                </ProtectedRoute>
+              }
+            >
+              {/* System Admin routes */}
+              <Route
+                path='/admin/dashboard'
+                element={
+                  <ProtectedRoute allowedRoles={["system_admin"]}>
+                    <AdminDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              {/* ... other admin routes */}
+
+              {/* Tenant Admin routes */}
+              <Route
+                path='/tenant/dashboard'
+                element={
+                  <ProtectedRoute allowedRoles={["tenant_admin"]}>
+                    <TenantDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/tenant/analytics'
+                element={
+                  <ProtectedRoute allowedRoles={["tenant_admin"]}>
+                    <AnalyticsDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/tenant/buses'
+                element={
+                  <ProtectedRoute allowedRoles={["tenant_admin"]}>
+                    <BusesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/tenant/routes'
+                element={
+                  <ProtectedRoute allowedRoles={["tenant_admin"]}>
+                    <BusRouteManagement />
+                  </ProtectedRoute>
+                }
+              />
+              {/* ... other tenant routes */}
+
+              {/* Operator routes */}
+              <Route
+                path='/operator/dashboard'
+                element={
+                  <ProtectedRoute allowedRoles={["operator"]}>
+                    <OperatorDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
+
+            {/* Fallback route */}
+            <Route path='*' element={<Navigate to='/' replace />} />
+          </Routes>
+          <Toaster />
+        </TooltipProvider>
+      </SettingsProvider>
+    </ThemeProvider>
+  );
+}
+
+export default App;
