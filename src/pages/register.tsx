@@ -16,7 +16,7 @@ export default function Registration() {
 
 {/* Left side */}
       <div className='col-span-4 h-screen m-auto'>
-        <div className='w-[1px] mb-20 mx-auto mt-24'>
+        <div className='w-[20px] mb-20 mx-auto mt-24'>
           <Logo />
         </div>
         <img
@@ -24,15 +24,15 @@ export default function Registration() {
           alt='Top Image'
           width={500}
           height={300}
-          className='ml-24 w-[80vh] h-[50vh] object-contain '
+          className='ml-16 w-[80vh] h-[50vh] object-contain '
         />
       </div>
 
  {/* Right side */}
-      <div className='col-span-6 flex items-center justify-center  z-10 p-4 '>
-        <div className='space-y-2 pt-2'>
-          <h1 className='text-[#E2F163] !font-semibold !text-4xl'>Register here!</h1>
-          <p className='text-base text-gray-400'>
+      <div className='col-span-6 flex items-center justify-center  z-10 px-4 py-2 '>
+        <div className='space-y-1'>
+          <h1 className='text-[#E2F163] !font-semibold !text-3xl'>Register here!</h1>
+          <p className='text-xs text-gray-400'>
             Let's get you all set up so you can access your Dirlink account
           </p>
 

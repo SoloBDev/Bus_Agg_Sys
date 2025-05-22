@@ -1,249 +1,274 @@
 "use client";
 
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { toast } from "sonner";
 import { Label } from "./ui/label";
-import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { cn } from "@/lib/utils";
+import axios from "axios";
 
 export interface RegistrationFormData {
-  companyName: string;
-  serviceType: string;
-  transportType: string;
-  TIN: string;
+  busBrandName: string;
+  tinNumber: string;
   companyPhone: string;
   companyEmail: string;
-  companyAddress: string;
-  contactPersonName: string;
-  contactPersonPhone: string;
-  contactPersonEmail: string;
-  contactPersonGender: string;
-  supportDocument: File | null;
-}
-
-interface RegistrationProps {
-  dataSetter: (data: RegistrationFormData) => void;
-  onSubmission: () => void;
+  address: string;
+  logo: string; // base64 string
+  supportDocument: string; // base64 string
+  operatorName: string;
+  phone: string;
+  email: string;
+  password: string;
 }
 
 const schema = yup.object({
-  companyName: yup.string().required("Company name is required"),
-  serviceType: yup.string().required("Select a service type"),
-  transportType: yup.string().required("Select a transport type"),
-  TIN: yup.string().required("TIN is required"),
+  busBrandName: yup.string().required("Bus brand name is required"),
+  tinNumber: yup.string().required("TIN number is required"),
   companyPhone: yup.string().required("Phone is required"),
   companyEmail: yup.string().email("Invalid email").required("Email is required"),
-  companyAddress: yup.string().required("Address is required"),
-  contactPersonName: yup.string().required("Full name is required"),
-  contactPersonPhone: yup.string().required("Phone is required"),
-  contactPersonEmail: yup.string().email("Invalid email").required("Email is required"),
-  contactPersonGender: yup.string().required("Gender is required"),
-  supportDocument: yup
-    .mixed<File>()
-    .nullable()
-    .defined()
-    .test("fileSize", "File is too large", (value) => {
-      return !value || (value && value.size <= 10 * 1024 * 1024); // Optional 10MB limit
-    }),
+  address: yup.string().required("Address is required"),
+  logo: yup.string().nullable().required("Logo is required"),
+  supportDocument: yup.string().nullable().required("Supporting document is required"),
+  operatorName: yup.string().required("Operator name is required"),
+  phone: yup.string().required("Phone is required"),
+  email: yup.string().email("Invalid email").required("Email is required"),
+  password: yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
 });
 
-function RegistrationForm({ dataSetter, onSubmission }: RegistrationProps) {
+function RegistrationForm() {
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [logoName, setLogoName] = useState("");
+  const [docName, setDocName] = useState("");
+
   const {
     register,
     handleSubmit,
-    control,
     formState: { errors },
     setValue,
-    watch,
-    setError,
   } = useForm<RegistrationFormData>({
     resolver: yupResolver(schema),
     defaultValues: {
-      companyName: "",
-      serviceType: "",
-      transportType: "",
-      TIN: "",
-      companyAddress: "",
+      busBrandName: "",
+      tinNumber: "",
       companyPhone: "",
-      contactPersonName: "",
-      contactPersonPhone: "",
-      contactPersonEmail: "",
-      contactPersonGender: "",
-      supportDocument: null,
+      companyEmail: "",
+      address: "",
+      logo: "",
+      supportDocument: "",
+      operatorName: "",
+      phone: "",
+      email: "",
+      password: "",
     },
   });
 
-  const onSubmit = (data: RegistrationFormData) => {
-    // Check for errors before submission
-    if (Object.keys(errors).length > 0) {
-      // Highlight all error fields
-      Object.keys(errors).forEach((field) => {
-        setError(field as keyof RegistrationFormData, {
-          type: "manual",
-          message: errors[field as keyof RegistrationFormData]?.message,
-        });
-      });
-      
-      // Show first error in toast
-      const firstError = Object.keys(errors)[0];
-      toast.error(errors[firstError as keyof RegistrationFormData]?.message);
-      return;
-    }
-
-    dataSetter(data);
-    onSubmission();
-    toast.success("Registration successful! Redirecting to login...");
-    setTimeout(() => {
-      navigate("/signup");
-    }, 2000);
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   };
 
-  const supportDocument = watch("supportDocument");
+  const handleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: "logo" | "supportDocument"
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const base64 = await fileToBase64(file);
+      setValue(field, base64);
+      if (field === "logo") setLogoName(file.name);
+      if (field === "supportDocument") setDocName(file.name);
+    }
+  };
 
-  // Helper function to apply error styles
   const getInputClass = (fieldName: keyof RegistrationFormData) => {
-    return errors[fieldName] 
-      ? "h-8 text-xs border-red-500 focus:ring-red-500 focus:border-red-500" 
+    return errors[fieldName]
+      ? "h-8 text-xs border-red-500 focus:ring-red-500 focus:border-red-500"
       : "h-8 text-xs";
   };
 
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
-      <h2 className="text-xs font-semibold mt-4 text-[#E2F163]/60 tracking-wider">Company Detail</h2>
+  const onSubmit = async (data: RegistrationFormData) => {
+    try {
+      const companyDetails = {
+        busBrandName: data.busBrandName,
+        tinNumber: data.tinNumber,
+        companyPhone: data.companyPhone,
+        companyEmail: data.companyEmail,
+        address: data.address,
+        logo: data.logo,
+        supportDocument: data.supportDocument,
+      };
 
-      <div className="space-y-2">
-        <Label className="font-normal text-gray-300">Company Name</Label>
-        <Input 
-          className={getInputClass("companyName")}
-          {...register("companyName")}
-          placeholder="Company name"
+      const operatorDetails = {
+        operatorName: data.operatorName,
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
+      };
+
+      // POST to JSON Server
+      await axios.post("http://localhost:3001/companies", companyDetails);
+      await axios.post("http://localhost:3001/operators", operatorDetails);
+
+      toast.success("OTP sent to contact email. Redirecting to verification...");
+      setTimeout(() => {
+        navigate("/verify-email", {
+          state: { email: data.email },
+        });
+      }, 2000);
+    } catch (err) {
+      toast.error("Registration failed. Please try again.");
+      console.error(err);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className='space-y-2'>
+      <h2 className='text-xs font-semibold mt-4 text-[#E2F163]/60 tracking-wider'>
+        Company Detail
+      </h2>
+
+      <div className='space-y-2'>
+        <Label className='font-normal text-gray-300'>Bus Brand Name</Label>
+        <Input
+          className={getInputClass("busBrandName")}
+          {...register("busBrandName")}
+          placeholder='Bus Brand Name'
         />
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label className="font-normal text-gray-300">TIN</Label>
-          <Input 
-            className={getInputClass("TIN")}
-            {...register("TIN")}
-            placeholder="TIN Number"
+      <div className='grid md:grid-cols-2 gap-6'>
+        <div className='space-y-2'>
+          <Label className='font-normal text-gray-300'>TIN Number</Label>
+          <Input
+            className={getInputClass("tinNumber")}
+            {...register("tinNumber")}
+            placeholder='TIN Number'
           />
         </div>
-        <div className="space-y-2">
-          <Label className="font-normal text-gray-300">Company Phone</Label>
-          <Input 
-            type="number" 
+        <div className='space-y-2'>
+          <Label className='font-normal text-gray-300'>Company Phone</Label>
+          <Input
+            type='tel'
             className={getInputClass("companyPhone")}
             {...register("companyPhone")}
-            placeholder="Phone number"
+            placeholder='Phone number'
           />
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label className="font-normal text-gray-300">Company Email</Label>
-          <Input 
-            type="email" 
+      <div className='grid md:grid-cols-2 gap-6'>
+        <div className='space-y-2'>
+          <Label className='font-normal text-gray-300'>Company Email</Label>
+          <Input
+            type='email'
             className={getInputClass("companyEmail")}
             {...register("companyEmail")}
-            placeholder="Company Email"
+            placeholder='Company Email'
           />
         </div>
-        <div className="space-y-2">
-          <Label className="font-normal text-gray-300">Company Address</Label>
-          <Input 
-            className={getInputClass("companyAddress")}
-            {...register("companyAddress")}
-            placeholder="Address"
+        <div className='space-y-2'>
+          <Label className='font-normal text-gray-300'>Address</Label>
+          <Input
+            className={getInputClass("address")}
+            {...register("address")}
+            placeholder='Address'
           />
         </div>
       </div>
 
-      <h2 className="text-xs font-semibold mt-4 text-[#E2F163]/60 tracking-wider">Contact Person</h2>
+      <div className='grid md:grid-cols-2 gap-6'>
+        <div className='space-y-2'>
+          <Label className='font-normal text-gray-300'>Company Logo</Label>
+          <Input
+            type='file'
+            accept='image/*'
+            className='h-8 text-xs'
+            onChange={(e) => handleFileUpload(e, "logo")}
+          />
+          {logoName && <p className='text-sm text-gray-400'>{logoName}</p>}
+          {errors.logo && <p className='text-red-500 text-xs'>{errors.logo.message}</p>}
+        </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label className="font-normal text-gray-300">Full Name</Label>
-          <Input 
-            className={getInputClass("contactPersonName")}
-            {...register("contactPersonName")}
-            placeholder="Contact person name"
+        <div className='space-y-2'>
+          <Label className='font-normal text-gray-300'>Supporting Document</Label>
+          <Input
+            type='file'
+            accept='image/*'
+            className='h-8 text-xs'
+            onChange={(e) => handleFileUpload(e, "supportDocument")}
+          />
+          {docName && <p className='text-sm text-gray-400'>{docName}</p>}
+          {errors.supportDocument && (
+            <p className='text-red-500 text-xs'>{errors.supportDocument.message}</p>
+          )}
+        </div>
+      </div>
+
+      <h2 className='text-xs font-semibold mt-4 text-[#E2F163]/60 tracking-wider'>
+        Operator Detail
+      </h2>
+
+      <div className='grid md:grid-cols-2 gap-6'>
+        <div className='space-y-2'>
+          <Label className='font-normal text-gray-300'>Operator Name</Label>
+          <Input
+            className={getInputClass("operatorName")}
+            {...register("operatorName")}
+            placeholder='Full Name'
           />
         </div>
-        <div className="space-y-1">
-          <Label className="font-normal text-gray-300">Phone Number</Label>
-          <Input 
-            className={getInputClass("contactPersonPhone")}
-            {...register("contactPersonPhone")}
-            placeholder="Contact phone"
+        <div className='space-y-2'>
+          <Label className='font-normal text-gray-300'>Phone Number</Label>
+          <Input
+            className={getInputClass("phone")}
+            {...register("phone")}
+            placeholder='Phone'
           />
         </div>
-        <div className="-mt-4">
-          <Label className="font-normal text-gray-300">Email</Label>
-          <Input 
-            className={getInputClass("contactPersonEmail")}
-            {...register("contactPersonEmail")}
-            placeholder="Contact email"
+        <div className='space-y-2'>
+          <Label className='font-normal text-gray-300'>Email</Label>
+          <Input
+            type='email'
+            className={getInputClass("email")}
+            {...register("email")}
+            placeholder='Email'
           />
         </div>
-        <div className=" flex flex-col">
-          <Label className="font-normal text-gray-300 !mt-0 !mb-2">Gender</Label>
-          <Controller 
-            name="contactPersonGender"
-            control={control}
-            render={({ field }) => (
-              <RadioGroup 
-                {...field} 
-                onValueChange={field.onChange}
-                className={`flex gap-6 ${errors.contactPersonGender ? "text-red-500" : ""}`}
-              >
-                <div className="flex items-center space-x-3">
-                  <RadioGroupItem 
-                    value="male" 
-                    id="male" 
-                    className={errors.contactPersonGender ? "border-red-500" : ""}
-                  />
-                  <Label className="text-xs font-light" htmlFor="male">Male</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem 
-                    value="female" 
-                    id="female" 
-                    className={errors.contactPersonGender ? "border-red-500": ""}
-                  />
-                  <Label className="text-xs font-light" htmlFor="female">Female</Label>
-                </div>
-              </RadioGroup>
+        <div className='space-y-2 relative'>
+          <Label className='font-normal text-gray-300'>Password</Label>
+          <Input
+            id='password'
+            type={showPassword ? "text" : "password"}
+            placeholder='••••••••'
+            className={cn("h-8 pt-3 pr-10 peer", getInputClass("password"))}
+            {...register("password")}
+          />
+          <button
+            type='button'
+            className='flex items-center absolute right-3 top-1/2 -translate-y-1/5 h-6'
+            onClick={() => setShowPassword((prev) => !prev)}
+          >
+            {showPassword ? (
+              <EyeOff className='h-5 w-5 text-muted-foreground' />
+            ) : (
+              <Eye className='h-5 w-5 text-muted-foreground' />
             )}
-          />
+          </button>
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label className="font-normal text-gray-300">Upload Supporting Document</Label>
-        <Input 
-          className={`h-8 text-xs ${errors.supportDocument ? "border-red-500" : ""}`}
-          type="file"
-          onChange={(e) => {
-            const file = e.target.files?.[0] || null;
-            setValue("supportDocument", file);
-          }}
-        />
-        {supportDocument && (
-          <p className="text-sm text-gray-600">{supportDocument.name}</p>
-        )}
-      </div>
-
-      <Button 
-        type="submit" 
-        className="mt-4 w-full !bg-primary-foreground/70 text-background h-10 px-8"
-      >
+      <Button type='submit' className='mt-4 w-full !bg-primary-foreground/70 text-background h-10 px-8'>
         Submit
       </Button>
     </form>

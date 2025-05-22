@@ -21,6 +21,7 @@ import Registration from "./pages/register";
 import AnalyticsDashboardPage from "./pages/tenant/tenant-analytics";
 import BusesPage from "./pages/tenant/buses";
 import BusRouteManagement from "./pages/tenant/bus-route-management";
+import VerifyEmailPage from "./components/email-verfication";
 // ... (keep all your other page imports)
 
 const ProtectedRoute = ({
@@ -70,6 +71,7 @@ function App() {
             <Route path='/login' element={<LoginPage />} />
             <Route path='/signup' element={<SignupPage />} />
             <Route path='/register' element={<Registration />} />
+            <Route path='/verify-email' element={<VerifyEmailPage />} />
 
             {/* Protected routes with layout */}
             <Route
