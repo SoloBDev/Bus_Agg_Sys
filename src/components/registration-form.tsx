@@ -11,7 +11,6 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
-import axios from "axios";
 
 export interface RegistrationFormData {
   busBrandName: string;
@@ -31,14 +30,23 @@ const schema = yup.object({
   busBrandName: yup.string().required("Bus brand name is required"),
   tinNumber: yup.string().required("TIN number is required"),
   companyPhone: yup.string().required("Phone is required"),
-  companyEmail: yup.string().email("Invalid email").required("Email is required"),
+  companyEmail: yup
+    .string()
+    .email("Invalid email")
+    .required("Email is required"),
   address: yup.string().required("Address is required"),
   logo: yup.string().nullable().required("Logo is required"),
-  supportDocument: yup.string().nullable().required("Supporting document is required"),
+  supportDocument: yup
+    .string()
+    .nullable()
+    .required("Supporting document is required"),
   operatorName: yup.string().required("Operator name is required"),
   phone: yup.string().required("Phone is required"),
   email: yup.string().email("Invalid email").required("Email is required"),
-  password: yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
+  password: yup
+    .string()
+    .min(6, "Password must be at least 6 characters")
+    .required("Password is required"),
 });
 
 function RegistrationForm() {
@@ -116,19 +124,20 @@ function RegistrationForm() {
         password: data.password,
       };
 
-      // POST to JSON Server
-      await axios.post("http://localhost:3001/companies", companyDetails);
-      await axios.post("http://localhost:3001/operators", operatorDetails);
+      console.log("🚌 Company JSON:", companyDetails);
+      console.log("👤 Operator JSON:", operatorDetails);
 
-      toast.success("OTP sent to contact email. Redirecting to verification...");
+      toast.success(
+        "OTP sent to contact email. Redirecting to verification..."
+      );
       setTimeout(() => {
         navigate("/verify-email", {
           state: { email: data.email },
         });
       }, 2000);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
-      toast.error("Registration failed. Please try again.");
-      console.error(err);
+      toast.error("File processing failed. Please try again.");
     }
   };
 
@@ -186,7 +195,6 @@ function RegistrationForm() {
           />
         </div>
       </div>
-
       <div className='grid md:grid-cols-2 gap-6'>
         <div className='space-y-2'>
           <Label className='font-normal text-gray-300'>Company Logo</Label>
@@ -197,11 +205,15 @@ function RegistrationForm() {
             onChange={(e) => handleFileUpload(e, "logo")}
           />
           {logoName && <p className='text-sm text-gray-400'>{logoName}</p>}
-          {errors.logo && <p className='text-red-500 text-xs'>{errors.logo.message}</p>}
+          {errors.logo && (
+            <p className='text-red-500 text-xs'>{errors.logo.message}</p>
+          )}
         </div>
 
         <div className='space-y-2'>
-          <Label className='font-normal text-gray-300'>Supporting Document</Label>
+          <Label className='font-normal text-gray-300'>
+            Supporting Document
+          </Label>
           <Input
             type='file'
             accept='image/*'
@@ -210,7 +222,9 @@ function RegistrationForm() {
           />
           {docName && <p className='text-sm text-gray-400'>{docName}</p>}
           {errors.supportDocument && (
-            <p className='text-red-500 text-xs'>{errors.supportDocument.message}</p>
+            <p className='text-red-500 text-xs'>
+              {errors.supportDocument.message}
+            </p>
           )}
         </div>
       </div>
@@ -250,7 +264,7 @@ function RegistrationForm() {
           <Input
             id='password'
             type={showPassword ? "text" : "password"}
-            placeholder='••••••••'
+            placeholder={"••••••••"}
             className={cn("h-8 pt-3 pr-10 peer", getInputClass("password"))}
             {...register("password")}
           />
@@ -268,7 +282,10 @@ function RegistrationForm() {
         </div>
       </div>
 
-      <Button type='submit' className='mt-4 w-full !bg-primary-foreground/70 text-background h-10 px-8'>
+      <Button
+        type='submit'
+        className='mt-4 w-full !bg-primary-foreground/70 text-background h-10 px-8'
+      >
         Submit
       </Button>
     </form>

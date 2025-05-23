@@ -22,6 +22,7 @@ const VerifyEmailPage = () => {
   const [otpValues, setOtpValues] = useState(["", "", "", ""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [otpStatus, setOtpStatus] = useState<"success" | "error" | "">("");
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
@@ -32,27 +33,13 @@ const VerifyEmailPage = () => {
 
   const sendOtp = async (targetEmail: string) => {
     try {
-      const generatedOtp = HARDCODED_OTP; // Replace with a random OTP generator if needed
-  
-      const response = await fetch("http://localhost:3001/verifications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: targetEmail, otp: generatedOtp }),
-      });
-  
-      if (!response.ok) {
-        throw new Error("Failed to save OTP");
-      }
-  
+      await new Promise((res) => setTimeout(res, 1000));
       toast.success(`OTP sent to ${targetEmail}`);
       setResendCooldown(30);
     } catch {
       toast.error("Failed to send OTP");
     }
   };
-  
 
   useEffect(() => {
     if (resendCooldown === 0) return;
@@ -63,15 +50,22 @@ const VerifyEmailPage = () => {
   }, [resendCooldown]);
 
   const handleOtpChange = (index: number, value: string) => {
-    if (!/^\d?$/.test(value)) return;
+    if (!/^\d*$/.test(value)) return;
 
-    const updated = [...otpValues];
-    updated[index] = value;
-    setOtpValues(updated);
-
-    if (value && index < 3) {
-      inputRefs.current[index + 1]?.focus();
+    if (value.length === 4 && index === 0) {
+      // Autofill all fields if 4 digits are pasted into the first input
+      const values = value.split("").slice(0, 4);
+      setOtpValues(values);
+      inputRefs.current[3]?.focus();
+    } else {
+      const updated = [...otpValues];
+      updated[index] = value;
+      setOtpValues(updated);
+      if (value && index < 3) {
+        inputRefs.current[index + 1]?.focus();
+      }
     }
+    setOtpStatus(""); // reset status on input
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
@@ -98,12 +92,17 @@ const VerifyEmailPage = () => {
       await new Promise((res) => setTimeout(res, 1000));
 
       if (code === HARDCODED_OTP) {
+        setOtpStatus("success");
         toast.success("Email verified successfully!");
-        navigate("/success");
+        setTimeout(() => navigate("/login"), 1000); // delay for animation
       } else {
+        setOtpStatus("error");
         toast.error("Incorrect OTP. Please try again.");
+        setOtpValues(["", "", "", ""]); // Reset OTP inputs
+      inputRefs.current[0]?.focus();  // Focus the first input
       }
     } catch {
+      setOtpStatus("error");
       toast.error("Something went wrong.");
     } finally {
       setIsSubmitting(false);
@@ -113,7 +112,7 @@ const VerifyEmailPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center mx-auto p-6 pt-8 w-7xl">
       <Card className="max-w-md w-full shadow-lg border border-muted">
-        <CardContent className="flex flex-col items-center space-y-8 px-12 w-ful !pt-8 !pb-2l">
+        <CardContent className="flex flex-col items-center space-y-8 px-12 w-full !pt-8 !pb-2l">
           <Logo />
 
           <div className="text-center space-y-2">
@@ -130,14 +129,21 @@ const VerifyEmailPage = () => {
                 key={i}
                 type="text"
                 inputMode="numeric"
-                maxLength={1}
+                maxLength={4}
                 value={digit}
                 onChange={(e) => handleOtpChange(i, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(i, e)}
                 ref={(el) => {
                   inputRefs.current[i] = el;
                 }}
-                className="w-12 h-12 border border-gray-300 rounded-md text-center text-xl font-semibold focus:outline-none focus:ring-2 focus:ring-primary"
+                className={`w-12 h-12 border rounded-md text-center text-xl font-semibold focus:outline-none focus:ring-2 
+                  ${
+                    otpStatus === "success"
+                      ? "border-green-500 ring-green-500"
+                      : otpStatus === "error"
+                      ? "border-red-500 ring-red-500"
+                      : "border-gray-300 focus:ring-primary"
+                  }`}
               />
             ))}
           </div>
