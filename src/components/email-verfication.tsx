@@ -198,7 +198,6 @@ const VerifyEmailPage = () => {
             <Button
               variant="ghost"
               className="text-sm underline"
-              onClick={() => sendOtp(email)}
               disabled={resendCooldown > 0 || isSubmitting}
             >
               {resendCooldown > 0
