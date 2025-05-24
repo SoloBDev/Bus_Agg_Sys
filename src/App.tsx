@@ -40,7 +40,7 @@ const ProtectedRoute = ({
   if (isLoading) {
     return <div>Loading...</div>;
   }
-
+  
   if (!user || !allowedRoles.includes(user.role)) {
     return <Navigate to='/login' replace />;
   }

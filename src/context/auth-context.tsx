@@ -9,7 +9,7 @@ import axios from "axios"
 axios.defaults.baseURL = "http://localhost:3001"
 
 // Define user roles
-export type UserRole = "system_admin" | "tenant_admin" | "operator"
+export type UserRole = "system_admin" | "operator" | "tenant_admin"
 
 // Define user interface
 export interface User {
@@ -17,7 +17,7 @@ export interface User {
   name: string
   email: string
   role: UserRole
-  password?: string
+  // password?: string
   companyName?: string
   branch?: string
   avatar?: string
@@ -47,7 +47,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 // Auth provider component
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [admin, setAdmin] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
 
@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     if (storedUser && token) {
       // Verify token is still valid (in a real app, you'd call an API endpoint)
-      setUser(JSON.parse(storedUser))
+      setAdmin(JSON.parse(storedUser))
     }
     setIsLoading(false)
   }, [])
@@ -68,34 +68,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       // 1. Verify user credentials
-      const userResponse = await axios.get(
-        `/users?email=${email}&password=${password}`
-      );
+      // const userResponse = await axios.get(
+      //   `/users?email=${email}&password=${password}`
+      // );
       
-      if (userResponse.data.length === 0) {
-        throw new Error("Invalid credentials");
-      }
+      // if (userResponse.data.length === 0) {
+      //   throw new Error("Invalid credentials");
+      // }
 
       // 2. Get auth token (simulated)
-      const authResponse = await axios.get(`/auth?email=${email}`);
+      const authResponse = await axios.post(`http://localhost:3001/api/operator/login`, {
+        email,
+        password
+      });
       
-      if (authResponse.data.length === 0) {
+      if (authResponse.data.success === false) {
         throw new Error("Authentication failed");
       }
 
       // 3. Store user and token
-      const user = userResponse.data[0];
-      const token = authResponse.data[0].token;
-      const success = authResponse.data[0].success;
+      // const user = userResponse.data[0];
+      /*
+       success: true,
+      message: "Login successful",
+      token,
+       */
+      const token = authResponse.data.token;
+      const success = authResponse.data.success;
+      const user = authResponse.data.user;
       
-      setUser(user);
+      setAdmin(user);
       // localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", token);
       localStorage.setItem("success", success);
        
 
       // 4. Redirect based on role
-      const redirectPath = {
+      const redirectPath ={
         system_admin: "/admin/dashboard",
         tenant_admin: "/tenant/dashboard",
         operator: "/operator/dashboard"
@@ -136,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       // Set user in state and localStorage
-      setUser(response.data);
+      setAdmin(response.data);
       localStorage.setItem("user", JSON.stringify(response.data));
       localStorage.setItem("token", loginResponse.data.token);
 
@@ -156,13 +165,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Logout function (updated to clear token)
   const logout = () => {
-    setUser(null);
+    setAdmin(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     navigate("/login");
   }
 
-  return <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user: admin, isLoading, login, signup, logout }}>{children}</AuthContext.Provider>
 }
 
 // Custom hook to use auth context

@@ -127,8 +127,9 @@ function RegistrationForm() {
       };
 
       // Make API call to create bus tenant
+      // https://n7gjzkm4-3001.euw.devtunnels.ms
       const response = await axios.post(
-        "https://n7gjzkm4-3001.euw.devtunnels.ms/api/bus-tenant",
+        "http://localhost:3001/api/bus-tenant",
         payload,
         {
           headers: {

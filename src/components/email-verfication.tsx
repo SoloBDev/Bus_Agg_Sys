@@ -100,8 +100,9 @@ const VerifyEmailPage = () => {
 
     setIsSubmitting(true);
     try {
+      // https://n7gjzkm4-3001.euw.devtunnels.ms/
       const response = await axios.post(
-        "https://n7gjzkm4-3001.euw.devtunnels.ms/api/verify-operator/verify-otp",
+        "http://localhost:3001/api/verify-operator/verify-otp",
         {
           email,
           otp: code
