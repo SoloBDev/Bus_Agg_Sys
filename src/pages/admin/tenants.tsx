@@ -438,8 +438,8 @@ export default function TenantsPage({ activeTab = "all-tenants" }: TenantsPagePr
             <TabsContent value="pending-approval" className="space-y-4">
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle>Pending Approval Requests</CardTitle>
-                  <CardDescription>Review and approve new tenant registration requests.</CardDescription>
+                  <CardTitle>Pending Approvals</CardTitle>
+                  <CardDescription> {pendingTenants.length} tenant(s) awaiting review</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {pendingTenants.length === 0 ? (
@@ -469,6 +469,9 @@ export default function TenantsPage({ activeTab = "all-tenants" }: TenantsPagePr
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
+                                <Button size="sm" onClick={() => handleApproveTenant(tenant.id)}>
+                                  Approve
+                                </Button>
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -476,9 +479,6 @@ export default function TenantsPage({ activeTab = "all-tenants" }: TenantsPagePr
                                   onClick={() => handleRejectTenant(tenant.id)}
                                 >
                                   Reject
-                                </Button>
-                                <Button size="sm" onClick={() => handleApproveTenant(tenant.id)}>
-                                  Approve
                                 </Button>
                               </div>
                             </div>

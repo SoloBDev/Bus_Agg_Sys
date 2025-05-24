@@ -126,14 +126,18 @@ export const useTenantStore = create<TenantStore>()(
           type: "tenant_registration",
           isRead: false,
           tenantId: newTenant.id,
-          redirectTo: "pending-approval",
+          redirectTo: "/admin/tenants?tab=pending-approval",
         }
+        
 
         set((state) => ({
           tenants: [...state.tenants, newTenant],
           notifications: [notification, ...state.notifications],
         }))
+        
       },
+
+      
 
       approveTenant: (tenantId) => {
         set((state) => {
@@ -162,12 +166,15 @@ export const useTenantStore = create<TenantStore>()(
             tenantId,
           }
 
+          
+
           return {
             tenants: updatedTenants,
             notifications: [notification, ...state.notifications],
           }
         })
       },
+      
 
       rejectTenant: (tenantId) => {
         set((state) => {

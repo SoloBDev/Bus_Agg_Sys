@@ -21,6 +21,7 @@ export interface User {
   companyName?: string
   branch?: string
   avatar?: string
+  status?: "active" | "pending" | "suspended"
 }
 
 // Define auth context interface
@@ -81,7 +82,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         password
       });
-      
+      if (authResponse.data.user.status === "pending") {
+        navigate("/pending-approval");
+        throw new Error("Your account is pending admin approval");
+      }
+  
+      if (authResponse.data.user.status === "suspended") {
+        throw new Error("Account suspended. Please contact support@example.com");
+      }
+
       if (authResponse.data.success === false) {
         throw new Error("Authentication failed");
       }

@@ -26,6 +26,7 @@ import AdminConfigPage from "./pages/admin/config";
 import AdminFinancesPage from "./pages/admin/finances";
 import AdminSecurityPage from "./pages/admin/security";
 import TenantsPage from "./pages/admin/tenants";
+import PendingApprovalPage from "./pages/pending-approvals";
 // ... (keep all your other page imports)
 
 const ProtectedRoute = ({
@@ -76,8 +77,10 @@ function App() {
             <Route path='/signup' element={<SignupPage />} />
             <Route path='/register' element={<Registration />} />
             <Route path='/verify-email' element={<VerifyEmailPage />} />
+            <Route path="/pending-approval" element= {<PendingApprovalPage />} />
 
             {/* Protected routes with layout */}
+
             <Route
               element={
                 <ProtectedRoute
