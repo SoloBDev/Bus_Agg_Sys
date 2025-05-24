@@ -22,6 +22,10 @@ import AnalyticsDashboardPage from "./pages/tenant/tenant-analytics";
 import BusesPage from "./pages/tenant/buses";
 import BusRouteManagement from "./pages/tenant/bus-route-management";
 import VerifyEmailPage from "./components/email-verfication";
+import AdminConfigPage from "./pages/admin/config";
+import AdminFinancesPage from "./pages/admin/finances";
+import AdminSecurityPage from "./pages/admin/security";
+import TenantsPage from "./pages/admin/tenants";
 // ... (keep all your other page imports)
 
 const ProtectedRoute = ({
@@ -89,6 +93,46 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={["system_admin"]}>
                     <AdminDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/admin/analytics'
+                element={
+                  <ProtectedRoute allowedRoles={["system_admin"]}>
+                    <AnalyticsDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/admin/config'
+                element={
+                  <ProtectedRoute allowedRoles={["system_admin"]}>
+                    <AdminConfigPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/admin/finances'
+                element={
+                  <ProtectedRoute allowedRoles={["system_admin"]}>
+                    <AdminFinancesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/admin/security'
+                element={
+                  <ProtectedRoute allowedRoles={["system_admin"]}>
+                    <AdminSecurityPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/admin/tenants'
+                element={
+                  <ProtectedRoute allowedRoles={["system_admin"]}>
+                    <TenantsPage />
                   </ProtectedRoute>
                 }
               />

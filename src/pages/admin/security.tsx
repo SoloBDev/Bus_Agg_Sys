@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Sidebar } from "../../components/sidebar"
 import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../components/ui/card"
 import { Input } from "../../components/ui/input"
@@ -116,7 +115,6 @@ export default function AdminSecurityPage() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar children={undefined} />
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold tracking-tight">Security</h2>

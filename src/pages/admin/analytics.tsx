@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { BarChart, LineChart } from "../../components/charts"
 import { DatePickerWithRange } from "../../components/date-range-picker"
-import { Sidebar } from "../../components/sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
 import { Users, Activity, TrendingUp, Clock } from "lucide-react"
@@ -53,7 +52,6 @@ export default function AdminAnalyticsPage() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar children={undefined} />
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold tracking-tight">Analytics</h2>

@@ -67,13 +67,13 @@ export function Sidebar({ children }: SidebarProps) {
     } else if (user.role === "tenant_admin") {
       return [
         { name: "Dashboard", href: "/tenant/dashboard", icon: LayoutDashboard },
-        { name: "Analytics", href: "/tenant/analytics", icon: BarChart3 },
         { name: "Buses", href: "/tenant/buses", icon: Bus },
         { name: "Routes", href: "/tenant/routes", icon: FaRoute },
         { name: "Bookings", href: "/tenant/bookings", icon: Book },
         { name: "Finances", href: "/tenant/finances", icon: CreditCard },
+        { name: "Scan Tickets", href: "/tenant/scan", icon: QrCode },
         { name: "Operators", href: "/tenant/operators", icon: Users },
-        { name: "Report Issue", href: "/tenant/issues", icon: Bell },
+        { name: "Feedbacks", href: "/tenant/feedbacks", icon: Bell },
         { name: "Settings", href: "/tenant/settings", icon: Settings },
       ];
     } else {
@@ -131,7 +131,7 @@ export function Sidebar({ children }: SidebarProps) {
             {!collapsed && (
               <div className='flex h-8 w-32 items-center !justify-between rounded-md  text-white '>
                 <FaBusSimple className='!h-8 !w-8' />
-                <span className='text-xl font-bold'>{user.companyName}</span>
+                <span className='text-xl font-bold'>{user?.companyName || "Company Name"}</span>
               </div>
             )}
           </div>

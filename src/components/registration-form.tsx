@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import axios from "axios";
 
 export interface RegistrationFormData {
   busBrandName: string;
@@ -35,11 +36,11 @@ const schema = yup.object({
     .email("Invalid email")
     .required("Email is required"),
   address: yup.string().required("Address is required"),
-  logo: yup.string().nullable().required("Logo is required"),
-  supportDocument: yup
-    .string()
-    .nullable()
-    .required("Supporting document is required"),
+  // logo: yup.string().nullable().required("Logo is required"),
+  // supportDocument: yup
+  //   .string()
+  //   .nullable()
+  //   .required("Supporting document is required"),
   operatorName: yup.string().required("Operator name is required"),
   phone: yup.string().required("Phone is required"),
   email: yup.string().email("Invalid email").required("Email is required"),
@@ -54,6 +55,7 @@ function RegistrationForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [logoName, setLogoName] = useState("");
   const [docName, setDocName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     register,
@@ -106,38 +108,65 @@ function RegistrationForm() {
   };
 
   const onSubmit = async (data: RegistrationFormData) => {
+    setIsSubmitting(true);
     try {
-      const companyDetails = {
+      // Prepare the request payload
+      const payload = {
         busBrandName: data.busBrandName,
         tinNumber: data.tinNumber,
-        companyPhone: data.companyPhone,
-        companyEmail: data.companyEmail,
+        contactPhone: data.companyPhone,
+        contactEmail: data.companyEmail,
         address: data.address,
         logo: data.logo,
         supportDocument: data.supportDocument,
-      };
 
-      const operatorDetails = {
         operatorName: data.operatorName,
         email: data.email,
         phone: data.phone,
         password: data.password,
       };
 
-      console.log("🚌 Company JSON:", companyDetails);
-      console.log("👤 Operator JSON:", operatorDetails);
-
-      toast.success(
-        "OTP sent to contact email. Redirecting to verification..."
+      // Make API call to create bus tenant
+      const response = await axios.post(
+        "https://n7gjzkm4-3001.euw.devtunnels.ms/api/bus-tenant",
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
-      setTimeout(() => {
+
+      if (response.status === 201) {
+        toast.success("Registration successful!");
+        // Redirect to verification page with email
         navigate("/verify-email", {
           state: { email: data.email },
         });
-      }, 2000);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (err) {
-      toast.error("File processing failed. Please try again.");
+      } else {
+        throw new Error(response.data.message || "Registration failed");
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      let errorMessage = "Registration failed. Please try again.";
+
+      if (error.response) {
+        // Handle different HTTP status codes
+        if (error.response.status === 400) {
+          errorMessage = error.response.data.message || "Invalid data provided";
+        } else if (error.response.status === 409) {
+          errorMessage = "Tenant with this name or TIN already exists";
+        } else if (error.response.status === 500) {
+          errorMessage = "Server error. Please try again later";
+        }
+      } else if (error.request) {
+        errorMessage = "Network error. Please check your connection";
+      }
+
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -154,6 +183,9 @@ function RegistrationForm() {
           {...register("busBrandName")}
           placeholder='Bus Brand Name'
         />
+        {errors.busBrandName && (
+          <p className='text-red-500 text-xs'>{errors.busBrandName.message}</p>
+        )}
       </div>
 
       <div className='grid md:grid-cols-2 gap-6'>
@@ -164,6 +196,9 @@ function RegistrationForm() {
             {...register("tinNumber")}
             placeholder='TIN Number'
           />
+          {errors.tinNumber && (
+            <p className='text-red-500 text-xs'>{errors.tinNumber.message}</p>
+          )}
         </div>
         <div className='space-y-2'>
           <Label className='font-normal text-gray-300'>Company Phone</Label>
@@ -173,6 +208,11 @@ function RegistrationForm() {
             {...register("companyPhone")}
             placeholder='Phone number'
           />
+          {errors.companyPhone && (
+            <p className='text-red-500 text-xs'>
+              {errors.companyPhone.message}
+            </p>
+          )}
         </div>
       </div>
 
@@ -185,6 +225,11 @@ function RegistrationForm() {
             {...register("companyEmail")}
             placeholder='Company Email'
           />
+          {errors.companyEmail && (
+            <p className='text-red-500 text-xs'>
+              {errors.companyEmail.message}
+            </p>
+          )}
         </div>
         <div className='space-y-2'>
           <Label className='font-normal text-gray-300'>Address</Label>
@@ -193,6 +238,9 @@ function RegistrationForm() {
             {...register("address")}
             placeholder='Address'
           />
+          {errors.address && (
+            <p className='text-red-500 text-xs'>{errors.address.message}</p>
+          )}
         </div>
       </div>
       <div className='grid md:grid-cols-2 gap-6'>
@@ -241,6 +289,11 @@ function RegistrationForm() {
             {...register("operatorName")}
             placeholder='Full Name'
           />
+          {errors.operatorName && (
+            <p className='text-red-500 text-xs'>
+              {errors.operatorName.message}
+            </p>
+          )}
         </div>
         <div className='space-y-2'>
           <Label className='font-normal text-gray-300'>Phone Number</Label>
@@ -249,6 +302,9 @@ function RegistrationForm() {
             {...register("phone")}
             placeholder='Phone'
           />
+          {errors.phone && (
+            <p className='text-red-500 text-xs'>{errors.phone.message}</p>
+          )}
         </div>
         <div className='space-y-2'>
           <Label className='font-normal text-gray-300'>Email</Label>
@@ -258,6 +314,9 @@ function RegistrationForm() {
             {...register("email")}
             placeholder='Email'
           />
+          {errors.email && (
+            <p className='text-red-500 text-xs'>{errors.email.message}</p>
+          )}
         </div>
         <div className='space-y-2 relative'>
           <Label className='font-normal text-gray-300'>Password</Label>
@@ -279,14 +338,18 @@ function RegistrationForm() {
               <Eye className='h-5 w-5 text-muted-foreground' />
             )}
           </button>
+          {errors.password && (
+            <p className='text-red-500 text-xs'>{errors.password.message}</p>
+          )}
         </div>
       </div>
 
       <Button
         type='submit'
         className='mt-4 w-full !bg-primary-foreground/70 text-background h-10 px-8'
+        disabled={isSubmitting}
       >
-        Submit
+        {isSubmitting ? "Registering..." : "Submit"}
       </Button>
     </form>
   );
