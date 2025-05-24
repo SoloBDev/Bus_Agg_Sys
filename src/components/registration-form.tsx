@@ -25,6 +25,7 @@ export interface RegistrationFormData {
   phone: string;
   email: string;
   password: string;
+  status: "pending" | "active" | "suspended";
 }
 
 const schema = yup.object({
