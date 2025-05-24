@@ -77,7 +77,7 @@ function RegistrationForm() {
       email: "",
       password: "",
     },
-  });
+  } as any);
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
