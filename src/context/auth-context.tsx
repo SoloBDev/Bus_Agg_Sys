@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           password,
         }
       );
-      if (authResponse.data.status) {
+      if (authResponse.data.status && authResponse.data.user.role !== "system_admin") {
         if (authResponse.data.status === "pending") {
           navigate("/pending-approval");
           throw new Error("Your account is pending admin approval");
