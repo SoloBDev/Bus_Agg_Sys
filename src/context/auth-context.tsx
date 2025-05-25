@@ -1,8 +1,13 @@
 "use client";
+"use client";
 
 import type React from "react";
 import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+
+// Set base URL for API calls
+axios.defaults.baseURL = "http://localhost:3001";
 
 // Define user roles
 export type UserRole = "system_admin" | "tenant_admin" | "operator";
@@ -13,17 +18,18 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
-  password?: string;
+  // password?: string
   companyName?: string;
   branch?: string;
   avatar?: string;
+  status: "active" | "pending" | "suspended";
 }
 
 // Define auth context interface
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>; // Fix parameters
   signup: (userData: SignupData) => Promise<void>;
   logout: () => void;
 }
@@ -41,94 +47,101 @@ export interface SignupData {
 // Create auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demonstration
-const mockUsers: User[] = [
-  {
-    id: "1",
-    name: "System Admin",
-    email: "admin@addisbus.com",
-    companyName: "ADDIS Bus",
-    role: "system_admin",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: "2",
-    name: "Abay Bus Admin",
-    email: "tenant@abaybus.com",
-    role: "tenant_admin",
-    companyName: "Abay Bus",
-    branch: "Addis Ababa",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: "3",
-    name: "Field Operator",
-    email: "operator@addisbus.com",
-    role: "operator",
-    companyName: "Odda Bus",
-    branch: "Akaki Kality",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-];
-
 // Auth provider component
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [admin, setAdmin] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   // Check for stored user on mount
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const token = localStorage.getItem("token");
+
+    if (storedUser && token) {
+      // Verify token is still valid (in a real app, you'd call an API endpoint)
+      setAdmin(JSON.parse(storedUser));
     }
     setIsLoading(false);
   }, []);
 
   // Login function
-  const login = async (email: string) => {
+  const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // 1. Verify user credentials
+      // const userResponse = await axios.get(
+      //   `/users?email=${email}&password=${password}`
+      // );
 
-      // Find user by email (mock authentication)
-      const foundUser = mockUsers.find((u) => u.email === email);
+      // if (userResponse.data.length === 0) {
+      //   throw new Error("Invalid credentials");
+      // }
 
-      if (!foundUser) {
-        throw new Error("Invalid credentials");
+      // 2. Get auth token (simulated)
+      const authResponse = await axios.post(
+        `http://localhost:3001/api/operator/login`,
+        {
+          email,
+          password,
+        }
+      );
+      if (authResponse.data.status && authResponse.data.user.role !== "system_admin") {
+        if (authResponse.data.status === "pending") {
+          navigate("/pending-approval");
+          throw new Error("Your account is pending admin approval");
+        }
+
+        if (authResponse.data.status === "suspended") {
+          throw new Error(
+            "Account suspended. Please contact support@example.com"
+          );
+        }
+      }
+      if (authResponse.data.success === false) {
+        throw new Error("Authentication failed");
       }
 
-      // Set user in state and localStorage
-      setUser(foundUser);
-      localStorage.setItem("user", JSON.stringify(foundUser));
+      // 3. Store user and token
+      // const user = userResponse.data[0];
+      /*
+       success: true,
+      message: "Login successful",
+      token,
+       */
+      const token = authResponse.data.token;
+      const success = authResponse.data.success;
+      const user = authResponse.data.user;
 
-      // Redirect based on role
-      if (foundUser.role === "system_admin") {
-        navigate("/admin/dashboard");
-      } else if (foundUser.role === "tenant_admin") {
-        navigate("/tenant/dashboard");
-      } else {
-        navigate("/operator/dashboard");
-      }
+      setAdmin(user);
+      // localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("token", token);
+      localStorage.setItem("success", success);
+
+      // 4. Redirect based on role
+      const redirectPath = {
+        system_admin: "/admin/dashboard",
+        tenant_admin: "/tenant/dashboard",
+        operator: "/operator/dashboard",
+      }[user.role as UserRole];
+
+      navigate(redirectPath);
     } catch (error) {
       console.error("Login failed:", error);
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Signup function
+  // Signup function (updated to use API)
   const signup = async (userData: SignupData) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Create new user (in a real app, this would be handled by the backend)
-      const newUser: User = {
+      // Make API call to json-server
+      const response = await axios.post("/users", {
         id: Math.random().toString(36).substring(2, 9),
         name: userData.adminName,
         email: userData.email,
@@ -137,14 +150,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         branch: userData.branch,
         password: userData.password,
         avatar: "/placeholder.svg?height=40&width=40",
-      };
+      });
+
+      // Simulate login after signup
+      const loginResponse = await axios.post("/auth/login", {
+        email: userData.email,
+        password: userData.password,
+      });
 
       // Set user in state and localStorage
-      setUser(newUser);
-      localStorage.setItem("user", JSON.stringify(newUser));
+      setAdmin(response.data);
+      localStorage.setItem("user", JSON.stringify(response.data));
+      localStorage.setItem("token", loginResponse.data.token);
 
       // Redirect based on role
-      if (newUser.role === "tenant_admin") {
+      if (response.data.role === "tenant_admin") {
         navigate("/tenant/dashboard");
       } else {
         navigate("/operator/dashboard");
@@ -157,15 +177,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Logout function
+  // Logout function (updated to clear token)
   const logout = () => {
-    setUser(null);
+    setAdmin(null);
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     navigate("/login");
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
+    <AuthContext.Provider
+      value={{ user: admin, isLoading, login, signup, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

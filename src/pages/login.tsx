@@ -56,22 +56,21 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     const isValid = await validateForm();
     if (!isValid) return;
-
+  
     setIsLoading(true);
-
+  
     try {
-      await login(email, password);
+      await login(email, password); // Pass both email and password
       toast.success("Login successful", {
         description: "Welcome back to the Addis Bus System",
       });
-      // No need to navigate here - the login function in auth-context handles redirection
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
       toast.error("Login failed", {
-        description: "Please check your credentials and try again",
+        description: error.message || "Please check your credentials and try again",
       });
     } finally {
       setIsLoading(false);

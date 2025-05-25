@@ -1,20 +1,17 @@
 "use client"
 
 import { useState } from "react"
-import { Sidebar } from "../../components/sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
-import { useAuth } from "../../context/auth-context"
 import { BarChart, LineChart, PieChart } from "../../components/charts"
 import { Activity, AlertTriangle, ArrowUpRight, Bus, DollarSign, Users } from "lucide-react"
 import { Button } from "../../components/ui/button"
 
 export default function AdminDashboardPage() {
-  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState("overview")
 
   return (
-    <Sidebar>
+    <>
       <div className="flex flex-col">
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-6">
           <div className="flex flex-1 items-center gap-4">
@@ -92,7 +89,7 @@ export default function AdminDashboardPage() {
                     <CardTitle>Revenue Overview</CardTitle>
                   </CardHeader>
                   <CardContent className="pl-2">
-                    <LineChart />
+                    <LineChart data={[]} />
                   </CardContent>
                 </Card>
                 <Card className="lg:col-span-3">
@@ -100,7 +97,7 @@ export default function AdminDashboardPage() {
                     <CardTitle>Tenant Distribution</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <PieChart />
+                    <PieChart data={[]} />
                   </CardContent>
                 </Card>
               </div>
@@ -134,7 +131,7 @@ export default function AdminDashboardPage() {
                     <CardDescription>Monthly booking trends across all tenants</CardDescription>
                   </CardHeader>
                   <CardContent className="pl-2">
-                    <BarChart />
+                    <BarChart data={[]} />
                   </CardContent>
                 </Card>
               </div>
@@ -181,6 +178,6 @@ export default function AdminDashboardPage() {
           </Tabs>
         </main>
       </div>
-    </Sidebar>
+    </>
   )
 }

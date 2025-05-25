@@ -5,12 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { Logo } from "./logo";
+import axios from "axios";
 
 interface LocationState {
   email: string;
 }
-
-const HARDCODED_OTP = "7482";
 
 const VerifyEmailPage = () => {
   const location = useLocation();
@@ -22,37 +21,41 @@ const VerifyEmailPage = () => {
   const [otpValues, setOtpValues] = useState(["", "", "", ""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [otpStatus, setOtpStatus] = useState<"success" | "error" | "">("");
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  useEffect(() => {
-    if (email) {
-      sendOtp(email);
-    }
-  }, [email]);
+  // useEffect(() => {
+  //   if (email) {
+  //     sendOtp(email);
+  //   }
+  // }, [email]);
 
-  const sendOtp = async (targetEmail: string) => {
-    try {
-      const generatedOtp = HARDCODED_OTP; // Replace with a random OTP generator if needed
-  
-      const response = await fetch("http://localhost:3001/verifications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: targetEmail, otp: generatedOtp }),
-      });
-  
-      if (!response.ok) {
-        throw new Error("Failed to save OTP");
-      }
-  
-      toast.success(`OTP sent to ${targetEmail}`);
-      setResendCooldown(30);
-    } catch {
-      toast.error("Failed to send OTP");
-    }
-  };
-  
+  // const sendOtp = async (targetEmail: string) => {
+  //   try {
+  //     setIsSubmitting(true);
+  //     const response = await axios.post(
+  //       "https://n7gjzkm4-3001.euw.devtunnels.ms/api/verify-operator/verify-otp",
+  //       { email: targetEmail }
+        
+  //     );
+      
+  //     console.log(response.data)
+  //     console.log(response.status)
+
+  //     if (response.status === 200) {
+  //       toast.success(`OTP sent to ${targetEmail}`);
+  //       setResendCooldown(30);
+  //     } 
+  //     // else {
+  //     //   throw new Error(response.data.message || "Failed to send OTP");
+  //     // }
+  //   } catch (error) {
+  //     console.error("Error sending OTP:", error);
+  //     toast.error("Failed to send OTP. Please try again.");
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
   useEffect(() => {
     if (resendCooldown === 0) return;
@@ -63,15 +66,22 @@ const VerifyEmailPage = () => {
   }, [resendCooldown]);
 
   const handleOtpChange = (index: number, value: string) => {
-    if (!/^\d?$/.test(value)) return;
+    if (!/^\d*$/.test(value)) return;
 
-    const updated = [...otpValues];
-    updated[index] = value;
-    setOtpValues(updated);
-
-    if (value && index < 3) {
-      inputRefs.current[index + 1]?.focus();
+    if (value.length === 4 && index === 0) {
+      // Autofill all fields if 4 digits are pasted into the first input
+      const values = value.split("").slice(0, 4);
+      setOtpValues(values);
+      inputRefs.current[3]?.focus();
+    } else {
+      const updated = [...otpValues];
+      updated[index] = value;
+      setOtpValues(updated);
+      if (value && index < 3) {
+        inputRefs.current[index + 1]?.focus();
+      }
     }
+    setOtpStatus(""); // reset status on input
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
@@ -88,23 +98,46 @@ const VerifyEmailPage = () => {
       return;
     }
 
-    console.log("Submitting to backend:", {
-      email,
-      otp: code,
-    });
-
     setIsSubmitting(true);
     try {
-      await new Promise((res) => setTimeout(res, 1000));
+      // https://n7gjzkm4-3001.euw.devtunnels.ms/
+      const response = await axios.post(
+        "http://localhost:3001/api/verify-operator/verify-otp",
+        {
+          email,
+          otp: code
+        }
+      );
 
-      if (code === HARDCODED_OTP) {
+      if (response.status === 200) {
+        setOtpStatus("success");
         toast.success("Email verified successfully!");
-        navigate("/success");
+        
+        // Store the token if the backend returns one
+        if (response.data.token) {
+          localStorage.setItem("authToken", response.data.token);
+        }
+        
+        setTimeout(() => navigate("/login"), 1000);
       } else {
-        toast.error("Incorrect OTP. Please try again.");
+        throw new Error(response.data.message || "Verification failed");
       }
-    } catch {
-      toast.error("Something went wrong.");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      setOtpStatus("error");
+      
+      let errorMessage = "Incorrect OTP. Please try again.";
+      if (error.response) {
+        if (error.response.status === 400) {
+          errorMessage = error.response.data.message || errorMessage;
+        } else if (error.response.status === 404) {
+          errorMessage = "OTP expired. Please request a new one.";
+        }
+      }
+      
+      toast.error(errorMessage);
+      setOtpValues(["", "", "", ""]);
+      inputRefs.current[0]?.focus();
     } finally {
       setIsSubmitting(false);
     }
@@ -113,13 +146,13 @@ const VerifyEmailPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center mx-auto p-6 pt-8 w-7xl">
       <Card className="max-w-md w-full shadow-lg border border-muted">
-        <CardContent className="flex flex-col items-center space-y-8 px-12 w-ful !pt-8 !pb-2l">
+        <CardContent className="flex flex-col items-center space-y-8 px-12 w-full !pt-8 !pb-2l">
           <Logo />
 
           <div className="text-center space-y-2">
             <h2 className="text-xl font-semibold">Verify Your Email</h2>
             <p className="text-sm text-muted-foreground">
-              We’ve sent a 4-digit code to{" "}
+              We've sent a 4-digit code to{" "}
               <span className="font-medium">{email}</span>
             </p>
           </div>
@@ -130,14 +163,21 @@ const VerifyEmailPage = () => {
                 key={i}
                 type="text"
                 inputMode="numeric"
-                maxLength={1}
+                maxLength={4}
                 value={digit}
                 onChange={(e) => handleOtpChange(i, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(i, e)}
                 ref={(el) => {
                   inputRefs.current[i] = el;
                 }}
-                className="w-12 h-12 border border-gray-300 rounded-md text-center text-xl font-semibold focus:outline-none focus:ring-2 focus:ring-primary"
+                className={`w-12 h-12 border rounded-md text-center text-xl font-semibold focus:outline-none focus:ring-2 
+                  ${
+                    otpStatus === "success"
+                      ? "border-green-500 ring-green-500"
+                      : otpStatus === "error"
+                      ? "border-red-500 ring-red-500"
+                      : "border-gray-300 focus:ring-primary"
+                  }`}
               />
             ))}
           </div>
@@ -160,8 +200,7 @@ const VerifyEmailPage = () => {
             <Button
               variant="ghost"
               className="text-sm underline"
-              onClick={() => sendOtp(email)}
-              disabled={resendCooldown > 0}
+              disabled={resendCooldown > 0 || isSubmitting}
             >
               {resendCooldown > 0
                 ? `Resend Code in ${resendCooldown}s`
