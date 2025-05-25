@@ -22,6 +22,7 @@ import AnalyticsDashboardPage from "./pages/tenant/tenant-analytics";
 import BusesPage from "./pages/tenant/buses";
 import BusRouteManagement from "./pages/tenant/bus-route-management";
 import VerifyEmailPage from "./components/email-verfication";
+import OperatorsPage from "./pages/tenant/operators";
 import AdminConfigPage from "./pages/admin/config";
 import AdminFinancesPage from "./pages/admin/finances";
 import AdminSecurityPage from "./pages/admin/security";
@@ -43,7 +44,7 @@ const ProtectedRoute = ({
   }
   
   if (!user || !allowedRoles.includes(user.role)) {
-    return <Navigate to='/login' replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
@@ -51,12 +52,12 @@ const ProtectedRoute = ({
 
 const MainLayout = () => {
   return (
-    <div className='min-h-screen flex w-[100%] '>
+    <div className="min-h-screen flex w-[100%] ">
       <Sidebar children={undefined} />
-      <div className='flex flex-col'>
+      <div className="flex flex-col">
         <TopNav />
-        <div className='mx-auto p-6'>
-          <main className=''>
+        <div className="mx-auto p-6">
+          <main className="">
             <Outlet /> {/* This renders the matched child route */}
           </main>
         </div>
@@ -67,7 +68,7 @@ const MainLayout = () => {
 
 function App() {
   return (
-    <ThemeProvider defaultTheme='dark'>
+    <ThemeProvider defaultTheme="dark">
       <SettingsProvider>
         <TooltipProvider delayDuration={0}>
           <Routes>
@@ -92,7 +93,7 @@ function App() {
             >
               {/* System Admin routes */}
               <Route
-                path='/admin/dashboard'
+                path="/admin/dashboard"
                 element={
                   <ProtectedRoute allowedRoles={["system_admin"]}>
                     <AdminDashboardPage />
@@ -143,7 +144,7 @@ function App() {
 
               {/* Tenant Admin routes */}
               <Route
-                path='/tenant/dashboard'
+                path="/tenant/dashboard"
                 element={
                   <ProtectedRoute allowedRoles={["tenant_admin"]}>
                     <TenantDashboardPage />
@@ -151,7 +152,7 @@ function App() {
                 }
               />
               <Route
-                path='/tenant/analytics'
+                path="/tenant/analytics"
                 element={
                   <ProtectedRoute allowedRoles={["tenant_admin"]}>
                     <AnalyticsDashboardPage />
@@ -159,7 +160,7 @@ function App() {
                 }
               />
               <Route
-                path='/tenant/buses'
+                path="/tenant/buses"
                 element={
                   <ProtectedRoute allowedRoles={["tenant_admin"]}>
                     <BusesPage />
@@ -167,10 +168,18 @@ function App() {
                 }
               />
               <Route
-                path='/tenant/routes'
+                path="/tenant/routes"
                 element={
                   <ProtectedRoute allowedRoles={["tenant_admin"]}>
                     <BusRouteManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tenant/operators"
+                element={
+                  <ProtectedRoute allowedRoles={["tenant_admin"]}>
+                    <OperatorsPage />
                   </ProtectedRoute>
                 }
               />
@@ -178,7 +187,7 @@ function App() {
 
               {/* Operator routes */}
               <Route
-                path='/operator/dashboard'
+                path="/operator/dashboard"
                 element={
                   <ProtectedRoute allowedRoles={["operator"]}>
                     <OperatorDashboardPage />
@@ -188,7 +197,7 @@ function App() {
             </Route>
 
             {/* Fallback route */}
-            <Route path='*' element={<Navigate to='/' replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           <Toaster />
         </TooltipProvider>

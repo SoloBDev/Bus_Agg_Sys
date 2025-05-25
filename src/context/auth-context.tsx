@@ -1,4 +1,5 @@
 "use client";
+"use client";
 
 import type React from "react";
 import { createContext, useContext, useState, useEffect } from "react";
@@ -9,7 +10,7 @@ import axios from "axios";
 axios.defaults.baseURL = "http://localhost:3001";
 
 // Define user roles
-export type UserRole = "system_admin" | "operator" | "tenant_admin";
+export type UserRole = "system_admin" | "tenant_admin" | "operator";
 
 // Define user interface
 export interface User {

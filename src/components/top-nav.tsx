@@ -23,22 +23,22 @@ export function TopNav() {
   const pathSegments = location.pathname.split("/").filter(Boolean);
   const { settings } = useSettings();
 
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
 
   return (
-    <header className='sticky top-0 z-40 border-b bg-background '>
-      <div className='flex h-16 items-center justify-between px-4 md:px-6 '>
-        <div className='hidden md:block'>
-          <nav className='flex items-center space-x-2'>
-            <Link to='/' className='text-sm font-medium'>
+    <header className="sticky top-0 z-40 border-b bg-background ">
+      <div className="flex h-16 items-center justify-between px-4 md:px-6 ">
+        <div className="hidden md:block">
+          <nav className="flex items-center space-x-2">
+            <Link to="/" className="text-sm font-medium">
               Home
             </Link>
             {pathSegments.map((segment, index) => (
               <React.Fragment key={segment}>
-                <span className='text-muted-foreground'>/</span>
+                <span className="text-muted-foreground">/</span>
                 <Link
                   to={`/${pathSegments.slice(0, index + 1).join("/")}`}
-                  className='text-sm font-medium'
+                  className="text-sm font-medium"
                 >
                   {segment.charAt(0).toUpperCase() + segment.slice(1)}
                 </Link>
@@ -46,12 +46,12 @@ export function TopNav() {
             ))}
           </nav>
         </div>
-        <div className='flex items-center gap-4'>
+        <div className="flex items-center gap-4">
           <Notifications />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
-                <Avatar className='h-8 w-8'>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8">
                   <AvatarImage src={settings.avatar} alt={settings.fullName} />
                   <AvatarFallback>
                     {settings.fullName
@@ -62,30 +62,34 @@ export function TopNav() {
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className='w-56' align='end' forceMount>
-              <DropdownMenuLabel className='font-normal'>
-                <div className='flex flex-col space-y-1'>
-                  <p className='text-sm font-medium leading-none'>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">
                     {settings.fullName}
                   </p>
-                  <p className='text-xs leading-none text-muted-foreground'>
+                  <p className="text-xs leading-none text-muted-foreground">
                     {settings.email}
                   </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link to='/settings' className="ml-3">Profile</Link>
+                <Link to="/settings" className="ml-3">
+                  Profile
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to='/settings' className="ml-3">Settings</Link>
+                <Link to="/settings" className="ml-3">
+                  Settings
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <button
                   onClick={logout}
-                  className='h-8  flex gap-3 bg-transparent'
+                  className="h-8  flex gap-3 bg-transparent"
                 >
-                  <LogOut className='h-4 w-4' />
+                  <LogOut className="h-4 w-4" />
                   <span>&nbsp; Log Out</span>
                 </button>
               </DropdownMenuItem>
