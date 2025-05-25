@@ -3,12 +3,50 @@
 import { useEffect, useState } from "react"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
-export function DashboardChart() {
+interface DashboardChartProps {
+  data: {
+    day: string;
+    transactions: number;
+  }[];
+  timeframe: "daily" | "weekly" | "monthly";
+}
+
+export function DashboardChart({ data, timeframe }: DashboardChartProps) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Format data based on timeframe
+  const formatChartData = () => {
+    if (timeframe === 'daily') {
+      // Show last 7 days for daily view
+      return data.slice(0, 7).map(item => ({
+        name: item.day.split('/')[0], // Just show day number
+        total: item.transactions
+      }));
+    } else if (timeframe === 'weekly') {
+      // Group by week (simplified - in real app you'd want proper week grouping)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return data.slice(0, 28).reduce((acc: any[], item, index) => {
+        const weekNum = Math.floor(index / 7);
+        if (!acc[weekNum]) {
+          acc[weekNum] = { name: `Week ${weekNum + 1}`, total: 0 };
+        }
+        acc[weekNum].total += item.transactions;
+        return acc;
+      }, []).filter(Boolean);
+    } else {
+      // Monthly view - show all data points
+      return data.map(item => ({
+        name: item.day,
+        total: item.transactions
+      }));
+    }
+  };
+
+  const chartData = formatChartData();
 
   if (!mounted) {
     return (
@@ -20,81 +58,42 @@ export function DashboardChart() {
 
   return (
     <div className="h-[350px] w-full">
-      <ResponsiveContainer width="100%" height="100%" >
-        <BarChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 20 }} >
-          <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart 
+          data={chartData} 
+          margin={{ top: 10, right: 10, left: 10, bottom: 20 }}
+        >
+          <XAxis 
+            dataKey="name" 
+            stroke="#888888" 
+            fontSize={12} 
+            tickLine={false} 
+            axisLine={false} 
+          />
           <YAxis
             stroke="#888888"
             fontSize={12}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(value) => `ETB${value}`}
+            tickFormatter={(value) => `R${value}`}
           />
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <Tooltip
             formatter={(value) => [`R${value}`, "Amount"]}
+            labelFormatter={(label) => timeframe === 'daily' ? `Day ${label}` : label}
             contentStyle={{
               backgroundColor: "hsl(var(--background))",
               borderColor: "hsl(var(--border))",
               borderRadius: "var(--radius)",
-              
             }}
           />
-          <Bar dataKey="total" fill="#444
-      " radius={[4, 4, 0, 0]} />
+          <Bar 
+            dataKey="total" 
+            fill="hsl(var(--primary))" 
+            radius={[4, 4, 0, 0]} 
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>
   )
 }
-
-const data = [
-  {
-    name: "Jan",
-    total: 45000,
-  },
-  {
-    name: "Feb",
-    total: 63500,
-  },
-  {
-    name: "Mar",
-    total: 58200,
-  },
-  {
-    name: "Apr",
-    total: 72800,
-  },
-  {
-    name: "May",
-    total: 85600,
-  },
-  {
-    name: "Jun",
-    total: 92400,
-  },
-  {
-    name: "Jul",
-    total: 105200,
-  },
-  {
-    name: "Aug",
-    total: 91000,
-  },
-  {
-    name: "Sep",
-    total: 97500,
-  },
-  {
-    name: "Oct",
-    total: 110800,
-  },
-  {
-    name: "Nov",
-    total: 142500,
-  },
-  {
-    name: "Dec",
-    total: 168000,
-  },
-]

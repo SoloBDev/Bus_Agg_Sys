@@ -16,7 +16,7 @@ import {
   TabsTrigger,
 } from "../../components/ui/tabs";
 import { UserPlusIcon, UsersIcon, UserXIcon, WalletIcon } from "lucide-react";
-import { RecentTransactions } from "@/components/recent-transactions";
+import { RecentTransactions, type RecentTransactionsProps } from "@/components/recent-transactions";
 
 // Mock data structure
 type DashboardData = {
@@ -56,13 +56,7 @@ type DashboardData = {
       nonUsers: string;
     };
   };
-  recentTransactions: {
-    id: string;
-    user: string;
-    amount: number;
-    status: "completed" | "pending" | "failed";
-    date: string;
-  }[];
+  recentTransactions: RecentTransactionsProps["transactions"];
   chartData: {
     day: string;
     transactions: number;
