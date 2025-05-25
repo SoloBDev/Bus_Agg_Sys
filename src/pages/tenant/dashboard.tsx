@@ -6,8 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { UserPlusIcon, UsersIcon, UserXIcon, WalletIcon } from "lucide-react"
 import { RecentTransactions } from "@/components/recent-transactions"
-import { TransactionDetailsModal } from "@/components/transaction-details-modal"
 import { fetchDashboardData, type DashboardData, type Transaction } from "@/lib/dashboard-data"
+import { TransactionDetailsModal } from "@/components/transaction-details-modal"
 
 export default function TenantDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
