@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
+
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import axios from "axios"
 import { Plus, X, Bus, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -14,16 +15,23 @@ import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
+interface AmenityId {
+  amenities: string[]
+}
+
 interface IBus {
+  _id?: string
   capacity: number
   busModel: string
-  amenities: string[]
-  buses: {
+  tenantId?: string
+  amenityId: AmenityId;
+  moreInfo: {
     plateNumber: string
     sideNumber: string
     maintenanceStatus: string
   }[]
 }
+
 
 export default function BusesPage() {
   const { toast } = useToast()
@@ -33,112 +41,148 @@ export default function BusesPage() {
   const [formData, setFormData] = useState<IBus>({
     capacity: 0,
     busModel: "",
-    amenities: [],
-    buses: [],
+    amenityId: {
+      amenities: [],
+    },
+    moreInfo: [],
   })
   const [amenityInput, setAmenityInput] = useState("")
   const [busCount, setBusCount] = useState(1)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [initialLoad, setInitialLoad] = useState(true)
 
-  // Fetch buses on component mount
-  useEffect(() => {
-    const fetchBuses = async () => {
-      try {
-        setIsLoading(true)
-        const response = await axios.get("http://localhost:3001/api/buses")
-        setBusFleets(response.data)
-        setView(response.data.length > 0 ? "list" : "empty")
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch buses",
-          variant: "destructive",
-        })
-      } finally {
-        setIsLoading(false)
+
+  // Memoized fetch function
+  const fetchBuses = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      const response = await axios.get("http://localhost:3002/api/buses", 
+        { headers: { 
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+         } }
+      )
+      if(response.status == 200) {
+      setBusFleets(response.data.buses)
+      setView(response.data.buses.length > 0 ? "list" : "empty")
       }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch buses",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+      setInitialLoad(false)
     }
-
-    fetchBuses()
   }, [toast])
+
+
+  // Fetch buses on component mount only once
+  useEffect(() => {
+    if (initialLoad) {
+      fetchBuses()
+    }
+  }, [fetchBuses, initialLoad])
+
 
   const handleAddAmenity = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && amenityInput.trim()) {
       e.preventDefault()
-      if (!formData.amenities.includes(amenityInput.trim())) {
-        setFormData({
-          ...formData,
-          amenities: [...formData.amenities, amenityInput.trim()],
-        })
+      if (!formData.amenityId.amenities.includes(amenityInput.trim())) {
+        setFormData(prev => ({
+          ...prev,
+          amenityId: {
+            ...prev.amenityId,
+            amenities: [...prev.amenityId.amenities, amenityInput.trim()],
+          },
+          
+        }))
       }
       setAmenityInput("")
     }
   }
 
+
   const handleRemoveAmenity = (amenity: string) => {
-    setFormData({
-      ...formData,
-      amenities: formData.amenities.filter((a) => a !== amenity),
-    })
+    setFormData(prev => ({
+      ...prev,
+      amenityId: {
+        ...prev.amenityId,
+        amenities: prev.amenityId.amenities.filter(a => a !== amenity),
+      }
+    }))
   }
+
 
   const handleBusCountChange = (value: number) => {
     setBusCount(value)
 
-    // Adjust the buses array based on the new count
-    const newBuses = [...formData.buses]
-    if (value > newBuses.length) {
-      // Add more bus entries
-      for (let i = newBuses.length; i < value; i++) {
-        newBuses.push({
-          plateNumber: "",
-          sideNumber: "",
-          maintenanceStatus: "Excellent",
-        })
-      }
-    } else if (value < newBuses.length) {
-      // Remove excess bus entries
-      newBuses.splice(value)
-    }
 
-    setFormData({
-      ...formData,
-      buses: newBuses,
+    setFormData(prev => {
+      const newBuses = [...prev.moreInfo]
+      if (value > newBuses.length) {
+        for (let i = newBuses.length; i < value; i++) {
+          newBuses.push({
+            plateNumber: "",
+            sideNumber: "",
+            maintenanceStatus: "Excellent",
+          })
+        }
+      } else if (value < newBuses.length) {
+        newBuses.splice(value)
+      }
+
+
+      return {
+        ...prev,
+        moreInfo: newBuses,
+      }
     })
   }
+
 
   const updateBusDetail = (index: number, field: string, value: string) => {
-    const updatedBuses = [...formData.buses]
-    updatedBuses[index] = {
-      ...updatedBuses[index],
-      [field]: value,
-    }
+    setFormData(prev => {
+      const updatedBuses = [...prev.moreInfo]
+      updatedBuses[index] = {
+        ...updatedBuses[index],
+        [field]: value,
+      }
 
-    setFormData({
-      ...formData,
-      buses: updatedBuses,
+
+      return {
+        ...prev,
+        moreInfo: updatedBuses,
+      }
     })
   }
+
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
+
 
     if (!formData.busModel.trim()) {
       newErrors.busModel = "Bus model is required"
     }
 
+
     if (formData.capacity <= 0) {
       newErrors.capacity = "Capacity must be greater than 0"
     }
 
-    if (formData.amenities.length === 0) {
+
+    if (formData.amenityId.amenities.length === 0) {
       newErrors.amenities = "At least one amenity is required"
     }
 
-    formData.buses.forEach((bus, index) => {
+
+    formData.moreInfo.forEach((bus, index) => {
       if (!bus.plateNumber.trim()) {
         newErrors[`plateNumber-${index}`] = "Plate number is required"
       }
+
 
       if (!bus.sideNumber.trim()) {
         newErrors[`sideNumber-${index}`] = "Side number is required"
@@ -146,35 +190,56 @@ export default function BusesPage() {
         newErrors[`sideNumber-${index}`] = "Side number must be exactly 4 digits"
       }
 
+
       if (!bus.maintenanceStatus) {
         newErrors[`maintenanceStatus-${index}`] = "Maintenance status is required"
       }
     })
 
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
 
     if (!validateForm()) {
       return
     }
 
+
     try {
       setIsLoading(true)
-      const response = await axios.post("http://localhost:3001/api/buses", formData)
-      
-      setBusFleets([...busFleets, response.data])
+      const response = await axios.post("http://localhost:3002/api/buses", 
+        {
+          ...formData,
+          amenities: formData.amenityId.amenities 
+        }, 
+        { headers: { 
+          Authorization: `Bearer ${localStorage.getItem("token")}` ,
+          "Content-Type": "application/json"
+        } }
+      )
+      if (response.status !== 201) {
+        throw new Error("Failed to add bus fleet")
+      }
+      setBusFleets(prev => {
+        console.log({ addedBus : response.data.bus});
+        return  [...prev, response.data.bus]})
       setFormData({
         capacity: 0,
         busModel: "",
-        amenities: [],
-        buses: [],
+        amenityId: {
+          amenities: [],
+        },
+        moreInfo: [],
       })
       setBusCount(1)
       setView("list")
+
 
       toast({
         title: "Success!",
@@ -191,6 +256,7 @@ export default function BusesPage() {
     }
   }
 
+
   const exportToJson = () => {
     if (busFleets.length === 0) {
       toast({
@@ -201,21 +267,23 @@ export default function BusesPage() {
       return
     }
 
+
     const dataStr = JSON.stringify(busFleets, null, 2)
     const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`
-    
+   
     const exportFileDefaultName = `bus-fleets-${new Date().toISOString().slice(0, 10)}.json`
-    
+   
     const linkElement = document.createElement('a')
     linkElement.setAttribute('href', dataUri)
     linkElement.setAttribute('download', exportFileDefaultName)
     linkElement.click()
-    
+   
     toast({
       title: "Export successful",
       description: "Your bus fleet data has been exported as JSON.",
     })
   }
+
 
   const renderEmptyState = () => (
     <div className="flex flex-col items-center justify-center h-[60vh] text-center">
@@ -232,6 +300,7 @@ export default function BusesPage() {
     </div>
   )
 
+
   const renderBusForm = () => (
     <form onSubmit={handleSubmit}>
       <Card className="mb-8">
@@ -247,11 +316,12 @@ export default function BusesPage() {
                 id="busModel"
                 placeholder="e.g. Mercedes Benz"
                 value={formData.busModel}
-                onChange={(e) => setFormData({ ...formData, busModel: e.target.value })}
+                onChange={(e) => setFormData(prev => ({ ...prev, busModel: e.target.value }))}
                 disabled={isLoading}
               />
               {errors.busModel && <p className="text-sm text-destructive">{errors.busModel}</p>}
             </div>
+
 
             <div className="space-y-2">
               <Label htmlFor="capacity">Capacity (Seats)*</Label>
@@ -261,21 +331,22 @@ export default function BusesPage() {
                 min="1"
                 placeholder="e.g. 52"
                 value={formData.capacity || ""}
-                onChange={(e) => setFormData({ ...formData, capacity: Number.parseInt(e.target.value) || 0 })}
+                onChange={(e) => setFormData(prev => ({ ...prev, capacity: Number.parseInt(e.target.value) || 0 }))}
                 disabled={isLoading}
               />
               {errors.capacity && <p className="text-sm text-destructive">{errors.capacity}</p>}
             </div>
           </div>
 
+
           <div className="space-y-2">
             <Label htmlFor="amenities">Amenities*</Label>
             <div className="relative">
               <div className="flex flex-wrap gap-2 mb-2">
-                {formData.amenities.map((amenity, index) => (
-                  <Badge 
-                    key={index} 
-                    variant="secondary" 
+                {formData.amenityId.amenities.map((amenity, index) => (
+                  <Badge
+                    key={index}
+                    variant="secondary"
                     className="px-2 h-6 text-xs flex items-center"
                   >
                     {amenity}
@@ -303,6 +374,7 @@ export default function BusesPage() {
             <p className="text-sm text-muted-foreground">Press Enter to add an amenity</p>
           </div>
 
+
           <div className="space-y-2">
             <Label htmlFor="busCount">Number of Buses*</Label>
             <Input
@@ -315,6 +387,7 @@ export default function BusesPage() {
               disabled={isLoading}
             />
           </div>
+
 
           {busCount > 0 && (
             <div className="space-y-4">
@@ -333,7 +406,7 @@ export default function BusesPage() {
                             id={`plateNumber-${index}`}
                             required
                             placeholder="e.g. ABC-123"
-                            value={formData.buses[index]?.plateNumber || ""}
+                            value={formData.moreInfo[index]?.plateNumber || ""}
                             onChange={(e) => updateBusDetail(index, "plateNumber", e.target.value)}
                             disabled={isLoading}
                           />
@@ -341,6 +414,7 @@ export default function BusesPage() {
                             <p className="text-sm text-destructive">{errors[`plateNumber-${index}`]}</p>
                           )}
                         </div>
+
 
                         <div className="space-y-2">
                           <Label htmlFor={`sideNumber-${index}`}>Side Number*</Label>
@@ -350,7 +424,7 @@ export default function BusesPage() {
                             placeholder="e.g. 1234"
                             pattern="[0-9]{4}"
                             maxLength={4}
-                            value={formData.buses[index]?.sideNumber || ""}
+                            value={formData.moreInfo[index]?.sideNumber || ""}
                             onChange={(e) => {
                               const value = e.target.value.replace(/\D/g, "")
                               updateBusDetail(index, "sideNumber", value)
@@ -362,10 +436,11 @@ export default function BusesPage() {
                           )}
                         </div>
 
+
                         <div className="space-y-2">
                           <Label htmlFor={`maintenanceStatus-${index}`}>Maintenance Status*</Label>
                           <Select
-                            value={formData.buses[index]?.maintenanceStatus || "Excellent"}
+                            value={formData.moreInfo[index]?.maintenanceStatus || "Excellent"}
                             onValueChange={(value) => updateBusDetail(index, "maintenanceStatus", value)}
                             disabled={isLoading}
                           >
@@ -404,6 +479,7 @@ export default function BusesPage() {
     </form>
   )
 
+
   const renderBusList = () => (
     <div className="space-y-6 w-full">
       <div className="flex items-center justify-between">
@@ -418,6 +494,7 @@ export default function BusesPage() {
         </div>
       </div>
 
+
       {busFleets.length === 0 ? (
         renderEmptyState()
       ) : (
@@ -429,7 +506,7 @@ export default function BusesPage() {
                   {fleet.busModel} ({fleet.capacity} seats)
                 </CardTitle>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {fleet.amenities.map((amenity, index) => (
+                  {fleet.amenityId.amenities.map((amenity, index) => (
                     <Badge key={index} variant="secondary">
                       {amenity}
                     </Badge>
@@ -441,7 +518,7 @@ export default function BusesPage() {
                   <AccordionItem value="buses">
                     <AccordionTrigger>
                       <span className="text-sm font-medium">
-                        {fleet.buses.length} {fleet.buses.length === 1 ? "Bus" : "Buses"}
+                        {fleet.moreInfo.length} {fleet.moreInfo.length === 1 ? "Bus" : "Buses"}
                       </span>
                     </AccordionTrigger>
                     <AccordionContent>
@@ -455,7 +532,7 @@ export default function BusesPage() {
                             </tr>
                           </thead>
                           <tbody>
-                            {fleet.buses.map((bus, busIndex) => (
+                            {fleet.moreInfo.map((bus, busIndex) => (
                               <tr key={busIndex} className="border-b">
                                 <td className="p-3">{bus.plateNumber}</td>
                                 <td className="p-3">{bus.sideNumber}</td>
@@ -484,13 +561,21 @@ export default function BusesPage() {
             </Card>
           ))}
         </div>
-      )}
-    </div>
+      )
+}
+
+
+      </div>
   )
+     
+
+
+
 
   return (
     <div className="container mx-auto py-8 !w-[120%]">
       <h1 className="text-3xl font-bold mb-8 !w-[150%]">Buses Management</h1>
+
 
       {isLoading && view === "empty" ? (
         <div className="flex items-center justify-center h-[60vh]">
@@ -506,3 +591,4 @@ export default function BusesPage() {
     </div>
   )
 }
+
