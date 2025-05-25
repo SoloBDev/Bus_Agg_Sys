@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { useEffect, useState } from "react"
@@ -5,13 +6,14 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 
 interface DashboardChartProps {
   data: {
-    day: string;
-    transactions: number;
-  }[];
-  timeframe: "daily" | "weekly" | "monthly";
+    day: string
+    transactions: number
+  }[]
+  timeframe: "daily" | "weekly" | "monthly"
+  onBarClick: (period: string) => void
 }
 
-export function DashboardChart({ data, timeframe }: DashboardChartProps) {
+export function DashboardChart({ data, timeframe, onBarClick }: DashboardChartProps) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -20,33 +22,44 @@ export function DashboardChart({ data, timeframe }: DashboardChartProps) {
 
   // Format data based on timeframe
   const formatChartData = () => {
-    if (timeframe === 'daily') {
+    if (timeframe === "daily") {
       // Show last 7 days for daily view
-      return data.slice(0, 7).map(item => ({
-        name: item.day.split('/')[0], // Just show day number
-        total: item.transactions
-      }));
-    } else if (timeframe === 'weekly') {
+      return data.slice(0, 7).map((item) => ({
+        name: item.day.split("/")[0], // Just show day number
+        total: item.transactions,
+        period: item.day,
+      }))
+    } else if (timeframe === "weekly") {
       // Group by week (simplified - in real app you'd want proper week grouping)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return data.slice(0, 28).reduce((acc: any[], item, index) => {
-        const weekNum = Math.floor(index / 7);
-        if (!acc[weekNum]) {
-          acc[weekNum] = { name: `Week ${weekNum + 1}`, total: 0 };
-        }
-        acc[weekNum].total += item.transactions;
-        return acc;
-      }, []).filter(Boolean);
+      return data
+        .slice(0, 28)
+        .reduce((acc: any[], item, index) => {
+          const weekNum = Math.floor(index / 7)
+          if (!acc[weekNum]) {
+            acc[weekNum] = { name: `Week ${weekNum + 1}`, total: 0, period: `Week ${weekNum + 1}` }
+          }
+          acc[weekNum].total += item.transactions
+          return acc
+        }, [])
+        .filter(Boolean)
     } else {
       // Monthly view - show all data points
-      return data.map(item => ({
+      return data.map((item) => ({
         name: item.day,
-        total: item.transactions
-      }));
+        total: item.transactions,
+        period: item.day,
+      }))
     }
-  };
+  }
 
-  const chartData = formatChartData();
+  const chartData = formatChartData()
+
+  const handleBarClick = (data: any) => {
+    if (data && data.activePayload && data.activePayload[0]) {
+      const period = data.activePayload[0].payload.period
+      onBarClick(period)
+    }
+  }
 
   if (!mounted) {
     return (
@@ -59,17 +72,8 @@ export function DashboardChart({ data, timeframe }: DashboardChartProps) {
   return (
     <div className="h-[350px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart 
-          data={chartData} 
-          margin={{ top: 10, right: 10, left: 10, bottom: 20 }}
-        >
-          <XAxis 
-            dataKey="name" 
-            stroke="#888888" 
-            fontSize={12} 
-            tickLine={false} 
-            axisLine={false} 
-          />
+        <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }} onClick={handleBarClick}>
+          <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
           <YAxis
             stroke="#888888"
             fontSize={12}
@@ -80,18 +84,14 @@ export function DashboardChart({ data, timeframe }: DashboardChartProps) {
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <Tooltip
             formatter={(value) => [`R${value}`, "Amount"]}
-            labelFormatter={(label) => timeframe === 'daily' ? `Day ${label}` : label}
+            labelFormatter={(label) => (timeframe === "daily" ? `Day ${label}` : label)}
             contentStyle={{
               backgroundColor: "hsl(var(--background))",
               borderColor: "hsl(var(--border))",
               borderRadius: "var(--radius)",
             }}
           />
-          <Bar 
-            dataKey="total" 
-            fill="hsl(var(--primary))" 
-            radius={[4, 4, 0, 0]} 
-          />
+          <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} cursor="pointer" />
         </BarChart>
       </ResponsiveContainer>
     </div>
