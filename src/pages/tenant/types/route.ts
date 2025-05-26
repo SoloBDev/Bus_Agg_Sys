@@ -51,7 +51,7 @@ export interface RouteDetails {
     name: string;
     scale: number;
     phone: string;
-    status: string;
+    status: "booked" | "pending" | "canceled" | "attended" | "missed" | "refunded"
   }[];
 }
 
@@ -85,13 +85,13 @@ export interface CreateRouteRequest {
   duration: string;
 }
 
-export interface RouteBooking {
-  _id: string;
-  routeId: string;
-  passengerName: string;
-  passengerPhone: string;
-  ticketCount: number;
-  totalAmount: number;
-  status: "booked" | "pending" | "canceled";
-  createdAt: string;
-}
+// export interface RouteBooking {
+//   _id: string;
+//   routeId: string;
+//   passengerName: string;
+//   passengerPhone: string;
+//   ticketCount: number;
+//   totalAmount: number;
+//   status: "booked" | "pending" | "canceled";
+//   createdAt: string;
+// }

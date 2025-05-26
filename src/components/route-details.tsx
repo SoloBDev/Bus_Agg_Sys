@@ -1,28 +1,31 @@
 "use client";
 
-import type { RouteDetails as RouteDetailsType } from "../pages/tenant/types/route";
+import type { RouteDetails } from "../pages/tenant/types/route";
 import { Download, Filter, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { busAPI } from "@/lib/api";
 
-interface RouteDetailsProps {
-  routeDetails: RouteDetailsType;
-}
+// interface RouteDetailsProps {
+//   routeDetails: RouteDetailsType;
+// }
 
-interface Booking {
-  _id: string;
-  routeId: string;
-  passengerName: string;
-  passengerPhone: string;
-  ticketCount: number;
-  totalAmount: number;
-   status: "booked" | "pending" | "canceled" | "attended" | "missed" | "refunded"
-  createdAt: string;
-}
+// interface Booking {
+//   _id: string;
+//   routeId: string;
+//   passengerName: string;
+//   passengerPhone: string;
+//   ticketCount: number;
+//   totalAmount: number;
+//   status: "booked" | "pending" | "canceled" | "attended" | "missed" | "refunded"
+//   createdAt: string;
+// }
 
-export default function RouteDetails({ routeDetails }: RouteDetailsProps) {
+export default function RouteDetails({routeId}: { routeId: string }) {
+  console.log("RouteDetails component rendered with routeId:", routeId);
   const [passengerFilter, setPassengerFilter] = useState<string>("all");
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [aggregatedRoute, setAggregatedRoute] = useState<RouteDetails | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -34,20 +37,21 @@ export default function RouteDetails({ routeDetails }: RouteDetailsProps) {
     }, 60000); // Update every minute
 
     return () => clearInterval(timeInterval);
-  }, []);
+  }, [routeId]);
 
   // Calculate journey progress for on-the-way routes
   const getJourneyProgress = () => {
+    if (!aggregatedRoute) return null;
     if (
-      routeDetails.status !== "on-the-way" ||
-      !routeDetails.departureTime ||
-      !routeDetails.arrivalTime
+      aggregatedRoute.status !== "on-the-way" ||
+      !aggregatedRoute.departureTime ||
+      !aggregatedRoute.arrivalTime
     ) {
       return null;
     }
 
-    const departure = new Date(routeDetails.departureTime);
-    const arrival = new Date(routeDetails.arrivalTime);
+    const departure = new Date(aggregatedRoute.departureTime);
+    const arrival = new Date(aggregatedRoute.arrivalTime);
     const now = currentTime;
 
     const totalDuration = arrival.getTime() - departure.getTime();
@@ -75,7 +79,10 @@ export default function RouteDetails({ routeDetails }: RouteDetailsProps) {
 
   // Determine filter options based on route status
   const getFilterOptions = () => {
-    const isJourneyStarted = routeDetails.status === "on-the-way" || routeDetails.status === "passed"
+    if (!aggregatedRoute) return [];
+    const isJourneyStarted =
+      aggregatedRoute.status === "on-the-way" ||
+      aggregatedRoute.status === "passed";
 
     if (isJourneyStarted) {
       return [
@@ -83,28 +90,28 @@ export default function RouteDetails({ routeDetails }: RouteDetailsProps) {
         { value: "attended", label: "Attended" },
         { value: "missed", label: "Missed" },
         { value: "refunded", label: "Refunded" },
-      ]
+      ];
     } else {
       return [
         { value: "all", label: "All" },
         { value: "booked", label: "Booked" },
         { value: "pending", label: "Pending" },
         { value: "canceled", label: "Canceled" },
-      ]
+      ];
     }
-  }
+  };
 
-  const filterOptions = getFilterOptions()
+  const filterOptions = getFilterOptions();
 
   // Fetch bookings from backend
-  const fetchBookings = async () => {
-    if (!routeDetails._id) return;
+  const fetchAggregatedRoute = async () => {
+    if (!routeId) return;
 
     setLoading(true);
     setError(null);
     try {
-      const data = await busAPI.getRouteBookings(routeDetails._id);
-      setBookings(data.bookings || data || []);
+      const response = await busAPI.getAggregatedRoute(routeId);
+      setAggregatedRoute(response.data || response || []);
     } catch (error) {
       console.error("Error fetching bookings:", error);
       setError("Failed to fetch bookings");
@@ -114,83 +121,96 @@ export default function RouteDetails({ routeDetails }: RouteDetailsProps) {
   };
 
   useEffect(() => {
-    const fetchBookings = async () => {
-      if (!routeDetails._id) return;
+    // const fetchBookings = async () => {
+    //   if (!routeDetails._id) return;
 
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await busAPI.getRouteBookings(routeDetails._id);
-        setBookings(data.bookings || data || []);
-      } catch (error) {
-        console.error("Error fetching bookings:", error);
-        setError("Failed to fetch bookings");
-      } finally {
-        setLoading(false);
-      }
-    };
+    //   setLoading(true);
+    //   setError(null);
+    //   try {
+    //     const data = await busAPI.getAggregatedRoute(routeDetails._id);
+    //     setAggregatedRoute(data.bookings || data || []);
+    //   } catch (error) {
+    //     console.error("Error fetching bookings:", error);
+    //     setError("Failed to fetch bookings");
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
 
-    fetchBookings();
-  }, [routeDetails._id]);
+    fetchAggregatedRoute();
+  }, [routeId]);
 
-  
   // Reset filter when route status changes
   useEffect(() => {
-    setPassengerFilter("all")
-  }, [routeDetails.status])
+    setPassengerFilter("all");
+  }, [
+    aggregatedRoute?.status,
+    aggregatedRoute?._id,
+    aggregatedRoute?.from,
+    aggregatedRoute?.to,
+  ]);
 
   // Use route passengers directly or convert bookings if needed
-  const passengers =
-    routeDetails.passengers.length > 0
-      ? routeDetails.passengers.map((passenger, index) => ({
-          orderNo: (index + 1).toString(),
-          name: passenger.name,
-          scale: passenger.scale,
-          phone: passenger.phone,
-          status: passenger.status,
-          totalAmount: passenger.scale * routeDetails.price,
-        }))
-      : bookings.map((booking, index) => ({
-          orderNo: (index + 1).toString(),
-          name: booking.passengerName,
-          scale: booking.ticketCount,
-          phone: booking.passengerPhone,
-          status: booking.status,
-          totalAmount: booking.totalAmount,
-        }));
+  if (!aggregatedRoute) {
+    return (
+      <div className='text-center py-4 text-gray-400'>
+        Loading route details...
+      </div>
+    );
+  }
+  const passengers = aggregatedRoute.passengers.map((passenger, index) => ({
+    orderNo: (index + 1).toString(),
+    name: passenger.name,
+    scale: passenger.scale,
+    phone: passenger.phone,
+    status: passenger.status,
+    totalAmount: passenger.scale * aggregatedRoute.price,
+  }));
+  // : bookings.map((booking, index) => ({
+  //     orderNo: (index + 1).toString(),
+  //     name: booking.passengerName,
+  //     scale: booking.ticketCount,
+  //     phone: booking.passengerPhone,
+  //     status: booking.status,
+  //     totalAmount: booking.totalAmount,
+  //   }));
 
-          // Count passengers by status
+  // Count passengers by status
   const getPassengerCounts = () => {
-    const isJourneyStarted = routeDetails.status === "on-the-way" || routeDetails.status === "passed"
+    const isJourneyStarted =
+      aggregatedRoute.status === "on-the-way" ||
+      aggregatedRoute.status === "passed";
 
     if (isJourneyStarted) {
+      if (!aggregatedRoute) return null;
+
       return {
         attended: passengers.filter((p) => p.status === "attended").length,
         missed: passengers.filter((p) => p.status === "missed").length,
         refunded: passengers.filter((p) => p.status === "refunded").length,
-      }
+      };
     } else {
       return {
         booked: passengers.filter((p) => p.status === "booked").length,
         pending: passengers.filter((p) => p.status === "pending").length,
         canceled: passengers.filter((p) => p.status === "canceled").length,
-      }
+      };
     }
-  }
+  };
 
-  const passengerCounts = getPassengerCounts()
+  const passengerCounts = getPassengerCounts();
 
   // Count confirmed passengers and sum their scales for ticket calculations
-  const confirmedPassengers = passengers.filter((p) => p.status === "booked" || p.status === "attended")
+  const confirmedPassengers = passengers.filter(
+    (p) => p.status === "booked" || p.status === "attended"
+  );
   const ticketsSold = confirmedPassengers.reduce((total, passenger) => {
     return total + passenger.scale;
   }, 0);
 
-  const { totalTickets } = routeDetails;
+  const { totalTickets } = aggregatedRoute;
   const ticketsAvailable = totalTickets - ticketsSold;
   const soldPercentage = (ticketsSold / totalTickets) * 100;
-
-
 
   // Calculate total payment based on confirmed passengers
   const totalPayment = confirmedPassengers.reduce((total, passenger) => {
@@ -205,7 +225,14 @@ export default function RouteDetails({ routeDetails }: RouteDetailsProps) {
 
   // CSV Export functionality
   const exportToCSV = () => {
-    const headers = ["No", "Passenger Name", "Scale", "Phone No", "Payment Amount", "Status"]
+    const headers = [
+      "No",
+      "Passenger Name",
+      "Scale",
+      "Phone No",
+      "Payment Amount",
+      "Status",
+    ];
 
     const csvData = [
       headers,
@@ -224,7 +251,7 @@ export default function RouteDetails({ routeDetails }: RouteDetailsProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `passengers-${routeDetails._id}-${routeDetails.from}-to-${routeDetails.to}.csv`;
+    a.download = `passengers-${aggregatedRoute._id}-${aggregatedRoute.from}-to-${aggregatedRoute.to}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -234,11 +261,11 @@ export default function RouteDetails({ routeDetails }: RouteDetailsProps) {
   return (
     <div className='flex-1 flex flex-col h-full'>
       {/* Sticky Header Section */}
-      <div className="sticky top-0 z-10 bg-[#121212] border-b border-gray-800">
+      <div className='sticky top-0 z-10 bg-[#121212] border-b border-gray-800'>
         <div className='flex justify-between items-center mb-6'>
           <div>
             <h2 className='text-xl font-medium'>
-              {routeDetails.from} to {routeDetails.to}
+              {aggregatedRoute.from} to {aggregatedRoute.to}
             </h2>
             {journeyProgress && (
               <div className='mt-2'>
@@ -274,7 +301,7 @@ export default function RouteDetails({ routeDetails }: RouteDetailsProps) {
             )}
           </div>
           <span className='text-[#e9d758] font-medium'>
-            ETB {routeDetails.price}
+            ETB {aggregatedRoute.price}
           </span>
         </div>
 
@@ -283,26 +310,26 @@ export default function RouteDetails({ routeDetails }: RouteDetailsProps) {
             <div className='relative w-10 h-10 rounded-full overflow-hidden bg-gray-700'>
               <img
                 src='/placeholder.svg?height=50&width=50'
-                alt={routeDetails.driver}
+                alt={aggregatedRoute.driver}
                 className='object-cover'
               />
             </div>
             <div>
-              <p className='font-normal'>{routeDetails.driver}</p>
+              <p className='font-normal'>{aggregatedRoute.driver}</p>
               <p className='text-xs text-gray-400'>Driver</p>
             </div>
           </div>
-          {routeDetails.assistant && (
+          {aggregatedRoute.assistant && (
             <div className='flex items-center gap-3'>
               <div className='relative w-10 h-10 rounded-full overflow-hidden bg-gray-700'>
-              <img
-                    src="/placeholder.svg?height=50&width=50"
-                    alt={routeDetails.assistant}
-                    className="object-cover"
-                  />
+                <img
+                  src='/placeholder.svg?height=50&width=50'
+                  alt={aggregatedRoute.assistant}
+                  className='object-cover'
+                />
               </div>
               <div>
-                <p className='font-normal'>{routeDetails.assistant}</p>
+                <p className='font-normal'>{aggregatedRoute.assistant}</p>
                 <p className='text-xs text-gray-400'>Assistant</p>
               </div>
             </div>
@@ -313,28 +340,32 @@ export default function RouteDetails({ routeDetails }: RouteDetailsProps) {
           <div className='grid grid-cols-6 gap-4 mb-6'>
             <div>
               <p className='text-[10px] text-gray-400'>route ID</p>
-              <p className='font-light text-xs'>{routeDetails._id}</p>
+              <p className='font-light text-xs'>{aggregatedRoute._id}</p>
             </div>
             <div>
               <p className='text-[10px] text-gray-400'>Side No_</p>
-              <p className='font-light text-xs'>{routeDetails.sideNo}</p>
+              <p className='font-light text-xs'>{aggregatedRoute.sideNo}</p>
             </div>
             <div>
               <p className='text-[10px] text-gray-400'>Duration</p>
-              <p className='font-light text-xs'>{routeDetails.duration}</p>
+              <p className='font-light text-xs'>{aggregatedRoute.duration}</p>
             </div>
             <div>
               <p className='text-[10px] text-gray-400'>Departure Time</p>
               <p className='font-light text-xs text-[#e9d758]'>
-                {routeDetails.departureTime}
+                {aggregatedRoute.departureTime}
               </p>
             </div>
             <div>
               <p className='text-[10px] text-gray-400'>Arrival Time</p>
-              <p className='font-light text-xs'>{routeDetails.arrivalTime}</p>
+              <p className='font-light text-xs'>
+                {aggregatedRoute.arrivalTime}
+              </p>
             </div>
             <div>
-            <p className="font-light text-xs">{routeDetails.distance} KM</p>
+              <p className='font-light text-xs'>
+                {aggregatedRoute.distance} KM
+              </p>
             </div>
           </div>
 
@@ -356,7 +387,9 @@ export default function RouteDetails({ routeDetails }: RouteDetailsProps) {
                     style={{ width: `${soldPercentage}%` }}
                   ></div>
                 </div>
-                <div className="mt-2 text-xs text-gray-400">{soldPercentage.toFixed(1)}% capacity filled</div>
+                <div className='mt-2 text-xs text-gray-400'>
+                  {soldPercentage.toFixed(1)}% capacity filled
+                </div>
               </div>
             </div>
 
@@ -368,12 +401,14 @@ export default function RouteDetails({ routeDetails }: RouteDetailsProps) {
                 <div className='relative w-8 h-8 rounded-full overflow-hidden bg-gray-700'>
                   <img
                     src='/placeholder.svg?height=50&width=50'
-                    alt={routeDetails.vendor}
+                    alt={aggregatedRoute.vendor}
                     className='object-cover'
                   />
                 </div>
                 <div>
-                  <p className='text-sm font-medium'>{routeDetails.vendor}</p>
+                  <p className='text-sm font-medium'>
+                    {aggregatedRoute.vendor}
+                  </p>
                   <p className='text-xs text-[#e9d758]'>Route Creator</p>
                 </div>
               </div>
@@ -395,13 +430,13 @@ export default function RouteDetails({ routeDetails }: RouteDetailsProps) {
               <div>
                 <h3 className='font-medium'>Passenger lists</h3>
                 <p className='text-sm text-gray-400'>
-                  {routeDetails.from} to {routeDetails.to}
+                  {aggregatedRoute.from} to {aggregatedRoute.to}
                 </p>
                 {error && <p className='text-sm text-red-500'>{error}</p>}
               </div>
               <div className='flex gap-2'>
                 <button
-                  onClick={fetchBookings}
+                  onClick={fetchAggregatedRoute}
                   className='flex items-center gap-1 px-3 py-1.5 border border-gray-600 text-gray-300 rounded-md text-sm hover:bg-gray-800'
                   disabled={loading}
                 >
@@ -427,7 +462,13 @@ export default function RouteDetails({ routeDetails }: RouteDetailsProps) {
                       <option key={option.value} value={option.value}>
                         {option.label}
                         {option.value !== "all" &&
-                          ` (${passengerCounts[option.value as keyof typeof passengerCounts] || 0})`}
+                          ` (${
+                            passengerCounts &&
+                            (passengerCounts[
+                              option.value as keyof typeof passengerCounts
+                            ] ||
+                              0)
+                          })`}
                       </option>
                     ))}
                   </select>
@@ -448,7 +489,7 @@ export default function RouteDetails({ routeDetails }: RouteDetailsProps) {
               ) : (
                 <PassengerTable
                   passengers={filteredPassengers}
-                  routeId={routeDetails._id}
+                  routeId={aggregatedRoute._id}
                 />
               )}
             </div>
@@ -471,7 +512,7 @@ interface PassengerTableProps {
   routeId: string;
 }
 
-function PassengerTable({ passengers, routeId }: PassengerTableProps) {
+function PassengerTable({ passengers }: PassengerTableProps) {
   return (
     <div className='overflow-x-auto'>
       <table className='w-full'>
@@ -514,14 +555,16 @@ function PassengerTable({ passengers, routeId }: PassengerTableProps) {
                 <td className='py-3'>
                   <span
                     className={`px-3 py-1 rounded-md text-xs ${
-                      passenger.status === "booked" || passenger.status === "attended"
+                      passenger.status === "booked" ||
+                      passenger.status === "attended"
                         ? "bg-[#e9d758] bg-opacity-20 text-[#e9d758]"
                         : passenger.status === "pending"
                         ? "bg-blue-500 bg-opacity-20 text-blue-500"
                         : passenger.status === "missed"
-                              ? "bg-orange-500 bg-opacity-20 text-orange-500"
-                              : passenger.status === "refunded"
-                                ? "bg-purple-500 bg-opacity-20 text-purple-500" : "bg-red-500 bg-opacity-20 text-red-500"
+                        ? "bg-orange-500 bg-opacity-20 text-orange-500"
+                        : passenger.status === "refunded"
+                        ? "bg-purple-500 bg-opacity-20 text-purple-500"
+                        : "bg-red-500 bg-opacity-20 text-red-500"
                     }`}
                   >
                     {passenger.status}
