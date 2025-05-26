@@ -28,6 +28,7 @@ import AdminFinancesPage from "./pages/admin/finances";
 import AdminSecurityPage from "./pages/admin/security";
 import TenantsPage from "./pages/admin/tenants";
 import PendingApprovalPage from "./pages/pending-approvals";
+import TransactionHistoryPage from "./pages/tenant/transactions-history";
 // ... (keep all your other page imports)
 
 const ProtectedRoute = ({
@@ -180,6 +181,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={["tenant_admin"]}>
                     <OperatorsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tenant/transaction-history"
+                element={
+                  <ProtectedRoute allowedRoles={["tenant_admin"]}>
+                    <TransactionHistoryPage />
                   </ProtectedRoute>
                 }
               />
