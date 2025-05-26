@@ -69,7 +69,6 @@ export function Sidebar({ children }: SidebarProps) {
         { name: "Dashboard", href: "/tenant/dashboard", icon: LayoutDashboard },
         { name: "Buses", href: "/tenant/buses", icon: Bus },
         { name: "Routes", href: "/tenant/routes", icon: FaRoute },
-        { name: "Bookings", href: "/tenant/bookings", icon: Book },
         { name: "Finances", href: "/tenant/finances", icon: CreditCard },
         { name: "Scan Tickets", href: "/tenant/scan", icon: QrCode },
         { name: "Operators", href: "/tenant/operators", icon: Users },

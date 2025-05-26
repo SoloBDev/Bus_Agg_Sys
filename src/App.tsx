@@ -183,6 +183,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              
               {/* ... other tenant routes */}
 
               {/* Operator routes */}
