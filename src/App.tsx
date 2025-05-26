@@ -29,6 +29,7 @@ import AdminSecurityPage from "./pages/admin/security";
 import TenantsPage from "./pages/admin/tenants";
 import PendingApprovalPage from "./pages/pending-approvals";
 import TransactionHistoryPage from "./pages/tenant/transactions-history";
+import SettingsPage from "./pages/settings";
 // ... (keep all your other page imports)
 
 const ProtectedRoute = ({
@@ -43,7 +44,7 @@ const ProtectedRoute = ({
   if (isLoading) {
     return <div>Loading...</div>;
   }
-  
+
   if (!user || !allowedRoles.includes(user.role)) {
     return <Navigate to="/login" replace />;
   }
@@ -74,12 +75,12 @@ function App() {
         <TooltipProvider delayDuration={0}>
           <Routes>
             {/* Public routes without layout */}
-            <Route path='/' element={<HomePage />} />
-            <Route path='/login' element={<LoginPage />} />
-            <Route path='/signup' element={<SignupPage />} />
-            <Route path='/register' element={<Registration />} />
-            <Route path='/verify-email' element={<VerifyEmailPage />} />
-            <Route path="/pending-approval" element= {<PendingApprovalPage />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/register" element={<Registration />} />
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
+            <Route path="/pending-approval" element={<PendingApprovalPage />} />
 
             {/* Protected routes with layout */}
 
@@ -102,7 +103,7 @@ function App() {
                 }
               />
               <Route
-                path='/admin/analytics'
+                path="/admin/analytics"
                 element={
                   <ProtectedRoute allowedRoles={["system_admin"]}>
                     <AnalyticsDashboardPage />
@@ -110,7 +111,7 @@ function App() {
                 }
               />
               <Route
-                path='/admin/config'
+                path="/admin/config"
                 element={
                   <ProtectedRoute allowedRoles={["system_admin"]}>
                     <AdminConfigPage />
@@ -118,7 +119,7 @@ function App() {
                 }
               />
               <Route
-                path='/admin/finances'
+                path="/admin/finances"
                 element={
                   <ProtectedRoute allowedRoles={["system_admin"]}>
                     <AdminFinancesPage />
@@ -126,7 +127,7 @@ function App() {
                 }
               />
               <Route
-                path='/admin/security'
+                path="/admin/security"
                 element={
                   <ProtectedRoute allowedRoles={["system_admin"]}>
                     <AdminSecurityPage />
@@ -134,7 +135,7 @@ function App() {
                 }
               />
               <Route
-                path='/admin/tenants'
+                path="/admin/tenants"
                 element={
                   <ProtectedRoute allowedRoles={["system_admin"]}>
                     <TenantsPage />
@@ -157,6 +158,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={["tenant_admin"]}>
                     <AnalyticsDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tenant/settings"
+                element={
+                  <ProtectedRoute allowedRoles={["tenant_admin"]}>
+                    <SettingsPage />
                   </ProtectedRoute>
                 }
               />
