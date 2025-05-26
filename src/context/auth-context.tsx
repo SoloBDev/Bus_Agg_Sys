@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 // Set base URL for API calls
-axios.defaults.baseURL = "http://localhost:3001";
+axios.defaults.baseURL = "https://n7gjzkm4-3001.euw.devtunnels.ms/";
 
 // Define user roles
 export type UserRole = "system_admin" | "tenant_admin" | "operator";
@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // 2. Get auth token (simulated)
       const authResponse = await axios.post(
-        `http://localhost:3001/api/operator/login`,
+        `https://n7gjzkm4-3001.euw.devtunnels.ms/api/operator/login`,
         {
           email,
           password,

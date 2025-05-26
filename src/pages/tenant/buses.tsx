@@ -56,7 +56,7 @@ export default function BusesPage() {
   const fetchBuses = useCallback(async () => {
     try {
       setIsLoading(true)
-      const response = await axios.get("http://localhost:3002/api/buses", 
+      const response = await axios.get("https://n7gjzkm4-3002.euw.devtunnels.ms/api/buses", 
         { headers: { 
           Authorization: `Bearer ${localStorage.getItem("token")}`
          } }
@@ -213,7 +213,7 @@ export default function BusesPage() {
 
     try {
       setIsLoading(true)
-      const response = await axios.post("http://localhost:3002/api/buses", 
+      const response = await axios.post("https://n7gjzkm4-3002.euw.devtunnels.ms/api/buses", 
         {
           ...formData,
           amenities: formData.amenityId.amenities 

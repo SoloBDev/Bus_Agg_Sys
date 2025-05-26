@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
 import { BarChart, LineChart, PieChart } from "../../components/charts"
@@ -8,7 +7,7 @@ import { Activity, AlertTriangle, ArrowUpRight, Bus, DollarSign, Users } from "l
 import { Button } from "../../components/ui/button"
 
 export default function AdminDashboardPage() {
-  const [activeTab, setActiveTab] = useState("overview")
+  // Removed unused activeTab state
 
   return (
     <>
@@ -69,16 +68,16 @@ export default function AdminDashboardPage() {
           </div>
           <Tabs defaultValue="overview" className="space-y-4">
             <TabsList>
-              <TabsTrigger value="overview" onClick={() => setActiveTab("overview")}>
+              <TabsTrigger value="overview">
                 Overview
               </TabsTrigger>
-              <TabsTrigger value="analytics" onClick={() => setActiveTab("analytics")}>
+              <TabsTrigger value="analytics">
                 Analytics
               </TabsTrigger>
-              <TabsTrigger value="reports" onClick={() => setActiveTab("reports")}>
+              <TabsTrigger value="reports">
                 Reports
               </TabsTrigger>
-              <TabsTrigger value="notifications" onClick={() => setActiveTab("notifications")}>
+              <TabsTrigger value="notifications">
                 Notifications
               </TabsTrigger>
             </TabsList>
