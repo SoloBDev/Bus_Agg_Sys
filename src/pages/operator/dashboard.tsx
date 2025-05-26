@@ -139,7 +139,7 @@ export default function OperatorDashboardPage() {
                     <CardDescription>Today's passenger volume by trip</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <BarChart />
+                    <BarChart data={[]} />
                   </CardContent>
                 </Card>
                 <Card>
@@ -148,7 +148,7 @@ export default function OperatorDashboardPage() {
                     <CardDescription>Passenger volume for the week</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <LineChart />
+                    <LineChart data={[]} />
                   </CardContent>
                 </Card>
               </div>
