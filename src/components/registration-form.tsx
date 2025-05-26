@@ -78,6 +78,7 @@ function RegistrationForm() {
       email: "",
       password: "",
     },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any);
 
   const fileToBase64 = (file: File): Promise<string> => {
@@ -130,7 +131,7 @@ function RegistrationForm() {
       // Make API call to create bus tenant
       // https://n7gjzkm4-3001.euw.devtunnels.ms
       const response = await axios.post(
-        "http://localhost:3001/api/bus-tenant",
+        "https://n7gjzkm4-3001.euw.devtunnels.ms/api/bus-tenant",
         payload,
         {
           headers: {

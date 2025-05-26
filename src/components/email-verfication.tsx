@@ -102,7 +102,7 @@ const VerifyEmailPage = () => {
     try {
       // https://n7gjzkm4-3001.euw.devtunnels.ms/
       const response = await axios.post(
-        "http://localhost:3001/api/verify-operator/verify-otp",
+        "https://n7gjzkm4-3001.euw.devtunnels.ms/api/verify-operator/verify-otp",
         {
           email,
           otp: code

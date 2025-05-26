@@ -52,7 +52,7 @@ export default function RouteList({ routes, activeTab, setActiveTab, onSelectRou
 
       <div className="divide-y divide-gray-800">
       {filteredRoutes.map((route) => (
-          <RouteCard key={route.id} route={route} onSelect={() => onSelectRoute(route.id)} />
+          <RouteCard key={route._id} route={route} onSelect={() => onSelectRoute(route._id)} />
         ))}
       </div>
     </div>
@@ -76,7 +76,7 @@ function RouteCard({ route, onSelect }: RouteCardProps) {
         <h3 className="font-medium">
           {route.from} to {route.to}
         </h3>
-        <p className="text-sm text-gray-400">routeID {route.routeId}</p>
+        <p className="text-sm text-gray-400">routeID {route._id}</p>
       </div>
 
       {route.status === "on-the-way" && (
