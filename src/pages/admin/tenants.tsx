@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -68,8 +68,11 @@ export default function TenantsPage({
   const { toast } = useToast();
 
   const {
+    isLoading,
+    error,
     tenants,
     approveTenant,
+    fetchTenants,
     rejectTenant,
     suspendTenant,
     deleteTenant,
@@ -158,6 +161,10 @@ export default function TenantsPage({
         return "bg-gray-500/10 text-gray-500";
     }
   };
+
+  useEffect(()=> {
+    fetchTenants();
+  }, [])
 
   return (
     <>
@@ -671,7 +678,19 @@ export default function TenantsPage({
       </div>
 
       {/* Tenant Details Dialog */}
-      <Dialog open={isTenantDetailsOpen} onOpenChange={setIsTenantDetailsOpen}>
+    { isLoading &&(
+      <div className='flex items-center justify-center h-full'>
+        <p className='text-muted-foreground'>Loading tenants...</p>
+      </div>
+    )
+    }
+      {error && (
+        <div className='flex items-center justify-center h-full'>
+          <p className='text-red-600'>{error}</p>
+        </div>
+      )}
+      { !isLoading && !error &&(
+        <Dialog open={isTenantDetailsOpen} onOpenChange={setIsTenantDetailsOpen}>
         <DialogContent className='sm:max-w-[600px]'>
           <DialogHeader>
             <DialogTitle>Tenant Details</DialogTitle>
@@ -798,7 +817,7 @@ export default function TenantsPage({
             </div>
           )}
         </DialogContent>
-      </Dialog>
+      </Dialog>)}
     </>
   );
 }
