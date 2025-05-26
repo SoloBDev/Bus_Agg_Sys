@@ -1,8 +1,13 @@
-import { create } from "zustand"
-import { persist } from "zustand/middleware"
+/* eslint-disable @typescript-eslint/prefer-as-const */
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import axios from 'axios';
+
+const API_BASE_URL = 'http://localhost:3001/api/bus-tenant';
 
 export interface Tenant {
   id: string
+  _id?: string // MongoDB ID
   busBrandName: string
   tinNumber: string
   contactPhone: string
@@ -36,16 +41,13 @@ export interface Notification {
 interface TenantStore {
   tenants: Tenant[]
   notifications: Notification[]
-  addTenant: (
-    tenant: Omit<
-      Tenant,
-      "id" | "status" | "routes" | "buses" | "revenue" | "joinDate" | "registrationDate" | "operators"
-    >,
-  ) => void
-  approveTenant: (tenantId: string) => void
-  rejectTenant: (tenantId: string) => void
-  suspendTenant: (tenantId: string) => void
-  deleteTenant: (tenantId: string) => void
+  isLoading: boolean
+  error: string | null
+  fetchTenants: () => Promise<void>
+  approveTenant: (tenantId: string) => Promise<void>
+  rejectTenant: (tenantId: string) => Promise<void>
+  suspendTenant: (tenantId: string) => Promise<void>
+  deleteTenant: (tenantId: string) => Promise<void>
   markNotificationAsRead: (notificationId: string) => void
   getUnreadNotifications: () => Notification[]
   getPendingTenants: () => Tenant[]
@@ -56,190 +58,177 @@ interface TenantStore {
 export const useTenantStore = create<TenantStore>()(
   persist(
     (set, get) => ({
-      tenants: [
-        {
-          id: "1",
-          busBrandName: "Abay Bus",
-          tinNumber: "TIN001234567",
-          contactPhone: "+251911123456",
-          contactEmail: "info@abaybus.com",
-          address: "Addis Ababa, Ethiopia",
-          operatorName: "John Doe",
-          email: "john@abaybus.com",
-          phone: "+251911123456",
-          status: "active",
-          routes: 12,
-          buses: 24,
-          revenue: "ETB 1,234,567",
-          joinDate: "Jan 15, 2023",
-          registrationDate: "Jan 10, 2023",
-          operators: 3,
-        },
-        {
-          id: "2",
-          busBrandName: "Selam Bus",
-          tinNumber: "TIN001234568",
-          contactPhone: "+251911123457",
-          contactEmail: "info@selambus.com",
-          address: "Bahir Dar, Ethiopia",
-          operatorName: "Jane Smith",
-          email: "jane@selambus.com",
-          phone: "+251911123457",
-          status: "active",
-          routes: 8,
-          buses: 16,
-          revenue: "ETB 987,654",
-          joinDate: "Mar 22, 2023",
-          registrationDate: "Mar 18, 2023",
-          operators: 2,
-        },
-      ],
-      notifications: [
-        {
-          id: "1",
-          title: "System Update",
-          message: "New features have been added to the dashboard",
-          date: new Date().toISOString(),
-          type: "general",
-          isRead: true,
-        },
-      ],
+      tenants: [],
+      notifications: [],
+      isLoading: false,
+      error: null,
 
-      addTenant: (tenantData) => {
-        const newTenant: Tenant = {
-          ...tenantData,
-          id: Date.now().toString(),
-          status: "pending",
-          routes: 0,
-          buses: 0,
-          revenue: "ETB 0",
-          joinDate: "",
-          registrationDate: new Date().toLocaleDateString(),
-          operators: 1,
+      fetchTenants: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await axios.get(`${API_BASE_URL}`);
+          set({ 
+            tenants: response.data.map((tenant: any) => ({
+              ...tenant,
+              id: tenant._id || tenant.id, // Map _id to id for compatibility
+            })),
+            isLoading: false 
+          });
+        } catch (error) {
+          set({ 
+            error: 'Failed to fetch tenants',
+            isLoading: false 
+          });
+          console.error('Error fetching tenants:', error);
         }
-
-        const notification: Notification = {
-          id: Date.now().toString(),
-          title: "New Tenant Registration",
-          message: `${tenantData.busBrandName} has registered and is waiting for approval`,
-          date: new Date().toISOString(),
-          type: "tenant_registration",
-          isRead: false,
-          tenantId: newTenant.id,
-          redirectTo: "/admin/tenants?tab=pending-approval",
-        }
-        
-
-        set((state) => ({
-          tenants: [...state.tenants, newTenant],
-          notifications: [notification, ...state.notifications],
-        }))
-        
       },
 
-      
-
-      approveTenant: (tenantId) => {
-        set((state) => {
-          const updatedTenants = state.tenants.map((tenant) =>
-            tenant.id === tenantId
-              ? {
-                  ...tenant,
-                  status: "active" as const,
-                  joinDate: new Date().toLocaleDateString(),
-                  // Simulate some initial data when approved
-                  routes: Math.floor(Math.random() * 5) + 1,
-                  buses: Math.floor(Math.random() * 10) + 5,
-                  revenue: `ETB ${(Math.random() * 500000 + 100000).toLocaleString()}`,
-                }
-              : tenant,
-          )
-
-          const tenant = state.tenants.find((t) => t.id === tenantId)
-          const notification: Notification = {
-            id: Date.now().toString(),
-            title: "Tenant Approved",
-            message: `${tenant?.busBrandName} has been approved and activated`,
-            date: new Date().toISOString(),
-            type: "tenant_approved",
-            isRead: false,
-            tenantId,
-          }
-
+      approveTenant: async (tenantId) => {
+        set({ isLoading: true, error: null });
+        try {
+          await axios.patch(`${API_BASE_URL}/update-status/${tenantId}`, { status: 'active' });
           
+          set((state) => {
+            const updatedTenants = state.tenants.map((tenant) =>
+              tenant.id === tenantId
+                ? {
+                    ...tenant,
+                    status: "active" as "active",
+                    registrationDate: new Date().toLocaleDateString(),
+                    joinDate: new Date().toLocaleDateString(),
+                  }
+                : tenant
+            );
 
-          return {
-            tenants: updatedTenants,
-            notifications: [notification, ...state.notifications],
-          }
-        })
-      },
-      
+            const tenant = state.tenants.find((t) => t.id === tenantId);
+            const notification: Notification = {
+              id: Date.now().toString(),
+              title: "Tenant Approved",
+              message: `${tenant?.busBrandName} has been approved and activated`,
+              date: new Date().toISOString(),
+              type: "tenant_approved",
+              isRead: false,
+              tenantId,
+            };
 
-      rejectTenant: (tenantId) => {
-        set((state) => {
-          const updatedTenants = state.tenants.map((tenant) =>
-            tenant.id === tenantId ? { ...tenant, status: "suspended" as const } : tenant,
-          )
-
-          const tenant = state.tenants.find((t) => t.id === tenantId)
-          const notification: Notification = {
-            id: Date.now().toString(),
-            title: "Tenant Rejected",
-            message: `${tenant?.busBrandName} registration has been rejected`,
-            date: new Date().toISOString(),
-            type: "tenant_rejected",
-            isRead: false,
-            tenantId,
-          }
-
-          return {
-            tenants: updatedTenants,
-            notifications: [notification, ...state.notifications],
-          }
-        })
-      },
-
-      suspendTenant: (tenantId) => {
-        set((state) => ({
-          tenants: state.tenants.map((tenant) =>
-            tenant.id === tenantId ? { ...tenant, status: "suspended" as const } : tenant,
-          ),
-        }))
+            return {
+              tenants: updatedTenants,
+              notifications: [notification, ...state.notifications],
+              isLoading: false
+            };
+          });
+        } catch (error) {
+          set({ 
+            error: 'Failed to approve tenant',
+            isLoading: false 
+          });
+          console.error('Error approving tenant:', error);
+        }
       },
 
-      deleteTenant: (tenantId) => {
-        set((state) => ({
-          tenants: state.tenants.filter((tenant) => tenant.id !== tenantId),
-        }))
+      rejectTenant: async (tenantId) => {
+        set({ isLoading: true, error: null });
+        try {
+          await axios.patch(`${API_BASE_URL}/update-status/${tenantId}`, { status: 'suspended' });
+          
+          set((state) => {
+            const updatedTenants = state.tenants.map((tenant) =>
+              tenant.id === tenantId ? { ...tenant, status: "suspended" as "suspended" } : tenant
+            );
+
+            const tenant = state.tenants.find((t) => t.id === tenantId);
+            const notification: Notification = {
+              id: Date.now().toString(),
+              title: "Tenant Rejected",
+              message: `${tenant?.busBrandName} registration has been rejected`,
+              date: new Date().toISOString(),
+              type: "tenant_rejected",
+              isRead: false,
+              tenantId,
+            };
+
+            return {
+              tenants: updatedTenants,
+              notifications: [notification, ...state.notifications],
+              isLoading: false
+            };
+          });
+        } catch (error) {
+          set({ 
+            error: 'Failed to reject tenant',
+            isLoading: false 
+          });
+          console.error('Error rejecting tenant:', error);
+        }
+      },
+
+      suspendTenant: async (tenantId) => {
+        set({ isLoading: true, error: null });
+        try {
+          await axios.patch(`${API_BASE_URL}/update-status/${tenantId}`, { status: 'suspended' });
+          
+          set((state) => ({
+            tenants: state.tenants.map((tenant) =>
+              tenant.id === tenantId ? { ...tenant, status: "suspended" } : tenant
+            ),
+            isLoading: false
+          }));
+        } catch (error) {
+          set({ 
+            error: 'Failed to suspend tenant',
+            isLoading: false 
+          });
+          console.error('Error suspending tenant:', error);
+        }
+      },
+
+      deleteTenant: async (tenantId) => {
+        set({ isLoading: true, error: null });
+        try {
+          await axios.delete(`${API_BASE_URL}/${tenantId}`);
+          set((state) => ({
+            tenants: state.tenants.filter((tenant) => tenant.id !== tenantId),
+            isLoading: false
+          }));
+        } catch (error) {
+          set({ 
+            error: 'Failed to delete tenant',
+            isLoading: false 
+          });
+          console.error('Error deleting tenant:', error);
+        }
       },
 
       markNotificationAsRead: (notificationId) => {
         set((state) => ({
           notifications: state.notifications.map((notification) =>
-            notification.id === notificationId ? { ...notification, isRead: true } : notification,
+            notification.id === notificationId ? { ...notification, isRead: true } : notification
           ),
-        }))
+        }));
       },
 
       getUnreadNotifications: () => {
-        return get().notifications.filter((n) => !n.isRead)
+        return get().notifications.filter((n) => !n.isRead);
       },
 
       getPendingTenants: () => {
-        return get().tenants.filter((t) => t.status === "pending")
+        return get().tenants.filter((t) => t.status === "pending");
       },
 
       getActiveTenants: () => {
-        return get().tenants.filter((t) => t.status === "active")
+        return get().tenants.filter((t) => t.status === "active");
       },
 
       getSuspendedTenants: () => {
-        return get().tenants.filter((t) => t.status === "suspended")
+        return get().tenants.filter((t) => t.status === "suspended");
       },
     }),
     {
       name: "tenant-store",
+      partialize: (state) => ({ 
+        notifications: state.notifications,
+        // Don't persist tenants from local storage since we're using API now
+      }),
     },
   ),
-)
+);
