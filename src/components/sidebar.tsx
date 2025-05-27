@@ -15,7 +15,7 @@ import {
   LogOut,
   Bell,
   ChevronLeft,
-  Book,
+  // Book,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -69,7 +69,7 @@ export function Sidebar({ children }: SidebarProps) {
         { name: "Dashboard", href: "/tenant/dashboard", icon: LayoutDashboard },
         { name: "Buses", href: "/tenant/buses", icon: Bus },
         { name: "Routes", href: "/tenant/routes", icon: FaRoute },
-        { name: "Bookings", href: "/tenant/bookings", icon: Book },
+        { name: "Revenue", href: "/tenant/revenue", icon: CreditCard },
         { name: "Transactions", href: "/tenant/transaction-history", icon: CreditCard },
         { name: "Operators", href: "/tenant/operators", icon: Users },
         { name: "Feedbacks", href: "/tenant/feedbacks", icon: Bell },
@@ -77,15 +77,11 @@ export function Sidebar({ children }: SidebarProps) {
       ];
     } else {
       return [
-        {
-          name: "Dashboard",
-          href: "/operator/dashboard",
-          icon: LayoutDashboard,
-        },
-        { name: "Trips", href: "/operator/trips", icon: Bus },
-        { name: "Passengers", href: "/operator/passengers", icon: Users },
-        { name: "Scan Tickets", href: "/operator/scan", icon: QrCode },
-        { name: "Report Issue", href: "/operator/issues", icon: Bell },
+        { name: "Dashboard", href: "/tenant/dashboard", icon: LayoutDashboard },
+        { name: "Buses", href: "/tenant/buses", icon: Bus },
+        { name: "Routes", href: "/tenant/routes", icon: FaRoute },
+        { name: "Feedbacks", href: "/tenant/feedbacks", icon: Bell },
+        { name: "Settings", href: "/tenant/settings", icon: Settings },
       ];
     }
   };
@@ -129,8 +125,22 @@ export function Sidebar({ children }: SidebarProps) {
           <div className='flex items-center gap-2'>
             {!collapsed && (
               <div className='flex h-8 w-32 items-center !justify-between rounded-md  text-white '>
-                <FaBusSimple className='!h-8 !w-8' />
-                <span className='text-xl font-bold'>{user?.companyName || "Company Name"}</span>
+                {user?.role === "system_admin" && (
+                  <div className='flex items-center gap-2'>
+                    <FaBusSimple className='!h-7 !w-7' />
+                    <span className='text-lg font-bold'>Super Admin</span>
+                    <span className='text-base font-normal'></span>
+                  </div>
+                )}
+                {(user?.role === "tenant_admin" ||
+                  user?.role === "operator") && (
+                  <div className='flex items-center gap-2'>
+                    <FaBusSimple className='!h-7 !w-7' />
+                    <span className='text-xl font-bold'>
+                      {user?.companyName}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -157,22 +167,22 @@ export function Sidebar({ children }: SidebarProps) {
 
         {/* Navigation */}
         <nav className='flex-1 overflow-y-auto p-2'>
-            {navItems.map((item) => (
-                <Link
-                to={item.href}
-                key={item.href}
-                className={cn(
-                  "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                  location.pathname === item.href
-                    ? "bg-secondary text-gray-900"
-                    : "!text-gray-300 hover:bg-secondary hover:text-secondary-foreground",
-                  collapsed && "justify-center px-2"
-                )}
-              >
-                <item.icon className={cn("h-4 w-4", !collapsed && "mr-3")} />
-                {!collapsed && <span>{item.name}</span>}
-              </Link>
-            ))}
+          {navItems.map((item) => (
+            <Link
+              to={item.href}
+              key={item.href}
+              className={cn(
+                "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                location.pathname === item.href
+                  ? "bg-secondary text-gray-900"
+                  : "!text-gray-300 hover:bg-secondary hover:text-secondary-foreground",
+                collapsed && "justify-center px-2"
+              )}
+            >
+              <item.icon className={cn("h-4 w-4", !collapsed && "mr-3")} />
+              {!collapsed && <span>{item.name}</span>}
+            </Link>
+          ))}
         </nav>
 
         {/* User section */}
@@ -186,23 +196,20 @@ export function Sidebar({ children }: SidebarProps) {
               <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
             </Avatar>
             {!collapsed && (
-              <div className='flex flex-1 flex-col overflow-hidden'>
-                <span className='truncate text-sm font-medium'>
-                  {user?.name}
-                </span>
-                <span className='truncate text-xs text-muted-foreground'>
-                  {user?.role.replace("_", " ")}
-                </span>
+              <div className="flex gap-4">
+                <div className='flex flex-1 flex-col overflow-hidden'>
+                  <span className='truncate text-sm font-medium'>
+                    {user?.name}
+                  </span>
+                  <span className='truncate text-xs text-muted-foreground'>
+                    {user?.role.replace("_", " ")}
+                  </span>
+                </div>
+                <button onClick={logout} className='h-8 w-6'>
+                  <LogOut className='h-4 w-4' />
+                </button>
               </div>
             )}
-            <Button
-              variant='ghost'
-              size='icon'
-              onClick={logout}
-              className='h-8 w-8'
-            >
-              <LogOut className='h-4 w-4' />
-            </Button>
           </div>
         </div>
       </aside>

@@ -28,9 +28,10 @@ import AdminFinancesPage from "./pages/admin/finances";
 import AdminSecurityPage from "./pages/admin/security";
 import TenantsPage from "./pages/admin/tenants";
 import PendingApprovalPage from "./pages/pending-approvals";
+import RevenueDashboard from "./pages/tenant/revenue";
 import TransactionHistoryPage from "./pages/tenant/transactions-history";
 import SettingsPage from "./pages/settings";
-// ... (keep all your other page imports)
+
 
 const ProtectedRoute = ({
   children,
@@ -46,7 +47,7 @@ const ProtectedRoute = ({
   }
 
   if (!user || !allowedRoles.includes(user.role)) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to='/login' replace />;
   }
 
   return <>{children}</>;
@@ -54,12 +55,12 @@ const ProtectedRoute = ({
 
 const MainLayout = () => {
   return (
-    <div className="min-h-screen flex w-[100%] ">
+    <div className='min-h-screen flex w-[100%] '>
       <Sidebar children={undefined} />
-      <div className="flex flex-col">
+      <div className='flex flex-col'>
         <TopNav />
-        <div className="mx-auto p-6">
-          <main className="">
+        <div className='mx-auto p-6'>
+          <main className=''>
             <Outlet /> {/* This renders the matched child route */}
           </main>
         </div>
@@ -70,17 +71,17 @@ const MainLayout = () => {
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="dark">
+    <ThemeProvider defaultTheme='dark'>
       <SettingsProvider>
         <TooltipProvider delayDuration={0}>
           <Routes>
             {/* Public routes without layout */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/register" element={<Registration />} />
-            <Route path="/verify-email" element={<VerifyEmailPage />} />
-            <Route path="/pending-approval" element={<PendingApprovalPage />} />
+            <Route path='/' element={<HomePage />} />
+            <Route path='/login' element={<LoginPage />} />
+            <Route path='/signup' element={<SignupPage />} />
+            <Route path='/register' element={<Registration />} />
+            <Route path='/verify-email' element={<VerifyEmailPage />} />
+            <Route path='/pending-approval' element={<PendingApprovalPage />} />
 
             {/* Protected routes with layout */}
 
@@ -95,7 +96,7 @@ function App() {
             >
               {/* System Admin routes */}
               <Route
-                path="/admin/dashboard"
+                path='/admin/dashboard'
                 element={
                   <ProtectedRoute allowedRoles={["system_admin"]}>
                     <AdminDashboardPage />
@@ -146,7 +147,7 @@ function App() {
 
               {/* Tenant Admin routes */}
               <Route
-                path="/tenant/dashboard"
+                path='/tenant/dashboard'
                 element={
                   <ProtectedRoute allowedRoles={["tenant_admin"]}>
                     <TenantDashboardPage />
@@ -154,7 +155,7 @@ function App() {
                 }
               />
               <Route
-                path="/tenant/analytics"
+                path='/tenant/analytics'
                 element={
                   <ProtectedRoute allowedRoles={["tenant_admin"]}>
                     <AnalyticsDashboardPage />
@@ -178,21 +179,34 @@ function App() {
                 }
               />
               <Route
-                path="/tenant/routes"
+                path='/tenant/routes'
                 element={
                   <ProtectedRoute allowedRoles={["tenant_admin"]}>
                     <BusRouteManagement />
                   </ProtectedRoute>
                 }
               />
+
               <Route
-                path="/tenant/operators"
+                path='/tenant/revenue'
+                element={
+                  <ProtectedRoute allowedRoles={["tenant_admin"]}>
+                    <RevenueDashboard
+                      tenantId={localStorage.getItem("tenantId") || ""} // Ensure tenantId is passed correctly
+                    />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path='/tenant/operators'
                 element={
                   <ProtectedRoute allowedRoles={["tenant_admin"]}>
                     <OperatorsPage />
                   </ProtectedRoute>
                 }
               />
+
               <Route
                 path="/tenant/transaction-history"
                 element={
@@ -201,11 +215,12 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
               {/* ... other tenant routes */}
 
               {/* Operator routes */}
               <Route
-                path="/operator/dashboard"
+                path='/operator/dashboard'
                 element={
                   <ProtectedRoute allowedRoles={["operator"]}>
                     <OperatorDashboardPage />
@@ -215,7 +230,7 @@ function App() {
             </Route>
 
             {/* Fallback route */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path='*' element={<Navigate to='/' replace />} />
           </Routes>
           <Toaster />
         </TooltipProvider>
