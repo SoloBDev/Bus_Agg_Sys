@@ -70,6 +70,7 @@ export function Sidebar({ children }: SidebarProps) {
         { name: "Buses", href: "/tenant/buses", icon: Bus },
         { name: "Routes", href: "/tenant/routes", icon: FaRoute },
         { name: "Revenue", href: "/tenant/revenue", icon: CreditCard },
+        { name: "Transactions", href: "/tenant/transaction-history", icon: CreditCard },
         { name: "Operators", href: "/tenant/operators", icon: Users },
         { name: "Feedbacks", href: "/tenant/feedbacks", icon: Bell },
         { name: "Settings", href: "/tenant/settings", icon: Settings },

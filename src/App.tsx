@@ -29,7 +29,9 @@ import AdminSecurityPage from "./pages/admin/security";
 import TenantsPage from "./pages/admin/tenants";
 import PendingApprovalPage from "./pages/pending-approvals";
 import RevenueDashboard from "./pages/tenant/revenue";
-// ... (keep all your other page imports)
+import TransactionHistoryPage from "./pages/tenant/transactions-history";
+import SettingsPage from "./pages/settings";
+
 
 const ProtectedRoute = ({
   children,
@@ -102,7 +104,7 @@ function App() {
                 }
               />
               <Route
-                path='/admin/analytics'
+                path="/admin/analytics"
                 element={
                   <ProtectedRoute allowedRoles={["system_admin"]}>
                     <AnalyticsDashboardPage />
@@ -110,7 +112,7 @@ function App() {
                 }
               />
               <Route
-                path='/admin/config'
+                path="/admin/config"
                 element={
                   <ProtectedRoute allowedRoles={["system_admin"]}>
                     <AdminConfigPage />
@@ -118,7 +120,7 @@ function App() {
                 }
               />
               <Route
-                path='/admin/finances'
+                path="/admin/finances"
                 element={
                   <ProtectedRoute allowedRoles={["system_admin"]}>
                     <AdminFinancesPage />
@@ -126,7 +128,7 @@ function App() {
                 }
               />
               <Route
-                path='/admin/security'
+                path="/admin/security"
                 element={
                   <ProtectedRoute allowedRoles={["system_admin"]}>
                     <AdminSecurityPage />
@@ -134,7 +136,7 @@ function App() {
                 }
               />
               <Route
-                path='/admin/tenants'
+                path="/admin/tenants"
                 element={
                   <ProtectedRoute allowedRoles={["system_admin"]}>
                     <TenantsPage />
@@ -161,7 +163,15 @@ function App() {
                 }
               />
               <Route
-                path='/tenant/buses'
+                path="/tenant/settings"
+                element={
+                  <ProtectedRoute allowedRoles={["tenant_admin"]}>
+                    <SettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tenant/buses"
                 element={
                   <ProtectedRoute allowedRoles={["tenant_admin"]}>
                     <BusesPage />
@@ -193,6 +203,15 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={["tenant_admin"]}>
                     <OperatorsPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/tenant/transaction-history"
+                element={
+                  <ProtectedRoute allowedRoles={["tenant_admin"]}>
+                    <TransactionHistoryPage />
                   </ProtectedRoute>
                 }
               />
