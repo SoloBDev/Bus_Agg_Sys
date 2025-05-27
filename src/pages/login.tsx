@@ -149,16 +149,16 @@ export default function LoginPage() {
 
           <div className='flex justify-between w-full text-sm'>
             <p className='text-zinc-400'>
-              Don't have an account yet?{" "}
+              Don't You Registered yet?{" "}
               <Link to='/signup' className='text-[#ff6b6b] hover:underline'>
-                Sign Up
+                Register
               </Link>
             </p>
             <Link
               to='/forgot-password'
               className='text-[#ff6b6b] hover:underline'
             >
-              Forgot password?
+              Welcome Back?
             </Link>
           </div>
         </div>

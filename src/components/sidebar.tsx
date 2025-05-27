@@ -60,6 +60,7 @@ export function Sidebar({ children }: SidebarProps) {
         { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
         { name: "Tenants", href: "/admin/tenants", icon: Bus },
         { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+        { name: "User Management", href: "/admin/user-management", icon: Users },
         { name: "Platform Config", href: "/admin/config", icon: Settings },
         { name: "Security", href: "/admin/security", icon: QrCode },
         { name: "Finances", href: "/admin/finances", icon: CreditCard },
@@ -77,11 +78,13 @@ export function Sidebar({ children }: SidebarProps) {
       ];
     } else {
       return [
-        { name: "Dashboard", href: "/tenant/dashboard", icon: LayoutDashboard },
-        { name: "Buses", href: "/tenant/buses", icon: Bus },
-        { name: "Routes", href: "/tenant/routes", icon: FaRoute },
-        { name: "Feedbacks", href: "/tenant/feedbacks", icon: Bell },
-        { name: "Settings", href: "/tenant/settings", icon: Settings },
+        { name: "Dashboard", href: "/operator/dashboard", icon: LayoutDashboard },
+        { name: "Buses", href: "/operator/buses", icon: Bus },
+        
+        { name: "Routes", href: "/operator/routes", icon: FaRoute },
+        { name: "Transactions", href: "/operator/transaction-history", icon: CreditCard },
+        { name: "Feedbacks", href: "/operator/feedbacks", icon: Bell },
+        { name: "Settings", href: "/operator/settings", icon: Settings },
       ];
     }
   };
@@ -136,8 +139,12 @@ export function Sidebar({ children }: SidebarProps) {
                   user?.role === "operator") && (
                   <div className='flex items-center gap-2'>
                     <FaBusSimple className='!h-7 !w-7' />
-                    <span className='text-xl font-bold'>
-                      {user?.companyName}
+                    <span className='text-lg font-bold'>
+                      {
+                        //fetch company name
+                        user.companyName || //name a user role + "Admin" string
+                        user.role.replace("_", " ") + " Admin"
+                      }
                     </span>
                   </div>
                 )}

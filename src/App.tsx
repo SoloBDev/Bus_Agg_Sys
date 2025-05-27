@@ -13,10 +13,10 @@ import { Toaster } from "./components/ui/sonner";
 import HomePage from "./pages/home";
 import LoginPage from "./pages/login";
 import { SettingsProvider } from "./context/settings-context";
-import SignupPage from "./pages/signup";
+// import SignupPage from "./pages/signup";
 import AdminDashboardPage from "./pages/admin/dashboard";
 import TenantDashboardPage from "./pages/tenant/dashboard";
-import OperatorDashboardPage from "./pages/operator/dashboard";
+// import OperatorDashboardPage from "./pages/operator/dashboard";
 import Registration from "./pages/register";
 import AnalyticsDashboardPage from "./pages/tenant/tenant-analytics";
 import BusesPage from "./pages/tenant/buses";
@@ -31,7 +31,9 @@ import PendingApprovalPage from "./pages/pending-approvals";
 import RevenueDashboard from "./pages/tenant/revenue";
 import TransactionHistoryPage from "./pages/tenant/transactions-history";
 import SettingsPage from "./pages/settings";
-
+// import Feedback from "./pages/tenant/feedback-component";
+import Feedbacks from "./pages/tenant/feedback";
+import UserManagementPage from "./pages/admin/user-management";
 
 const ProtectedRoute = ({
   children,
@@ -78,7 +80,7 @@ function App() {
             {/* Public routes without layout */}
             <Route path='/' element={<HomePage />} />
             <Route path='/login' element={<LoginPage />} />
-            <Route path='/signup' element={<SignupPage />} />
+            {/* <Route path='/signup' element={<SignupPage />} /> */}
             <Route path='/register' element={<Registration />} />
             <Route path='/verify-email' element={<VerifyEmailPage />} />
             <Route path='/pending-approval' element={<PendingApprovalPage />} />
@@ -104,7 +106,7 @@ function App() {
                 }
               />
               <Route
-                path="/admin/analytics"
+                path='/admin/analytics'
                 element={
                   <ProtectedRoute allowedRoles={["system_admin"]}>
                     <AnalyticsDashboardPage />
@@ -112,7 +114,7 @@ function App() {
                 }
               />
               <Route
-                path="/admin/config"
+                path='/admin/config'
                 element={
                   <ProtectedRoute allowedRoles={["system_admin"]}>
                     <AdminConfigPage />
@@ -120,7 +122,7 @@ function App() {
                 }
               />
               <Route
-                path="/admin/finances"
+                path='/admin/finances'
                 element={
                   <ProtectedRoute allowedRoles={["system_admin"]}>
                     <AdminFinancesPage />
@@ -128,7 +130,7 @@ function App() {
                 }
               />
               <Route
-                path="/admin/security"
+                path='/admin/security'
                 element={
                   <ProtectedRoute allowedRoles={["system_admin"]}>
                     <AdminSecurityPage />
@@ -136,10 +138,26 @@ function App() {
                 }
               />
               <Route
-                path="/admin/tenants"
+                path='/admin/tenants'
                 element={
                   <ProtectedRoute allowedRoles={["system_admin"]}>
                     <TenantsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/admin/tenants'
+                element={
+                  <ProtectedRoute allowedRoles={["system_admin"]}>
+                    <TenantsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/admin/user-management'
+                element={
+                  <ProtectedRoute allowedRoles={["system_admin"]}>
+                    <UserManagementPage />
                   </ProtectedRoute>
                 }
               />
@@ -154,16 +172,16 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
+              {/* <Route
                 path='/tenant/analytics'
                 element={
                   <ProtectedRoute allowedRoles={["tenant_admin"]}>
                     <AnalyticsDashboardPage />
                   </ProtectedRoute>
                 }
-              />
+              /> */}
               <Route
-                path="/tenant/settings"
+                path='/tenant/settings'
                 element={
                   <ProtectedRoute allowedRoles={["tenant_admin"]}>
                     <SettingsPage />
@@ -171,7 +189,7 @@ function App() {
                 }
               />
               <Route
-                path="/tenant/buses"
+                path='/tenant/buses'
                 element={
                   <ProtectedRoute allowedRoles={["tenant_admin"]}>
                     <BusesPage />
@@ -208,10 +226,21 @@ function App() {
               />
 
               <Route
-                path="/tenant/transaction-history"
+                path='/tenant/transaction-history'
                 element={
                   <ProtectedRoute allowedRoles={["tenant_admin"]}>
                     <TransactionHistoryPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path='/tenant/feedbacks'
+                element={
+                  <ProtectedRoute allowedRoles={["tenant_admin"]}>
+                    <Feedbacks
+                      params={{ routeId: "682f994203b5302e980b2de4" }}
+                    />
                   </ProtectedRoute>
                 }
               />
@@ -223,14 +252,64 @@ function App() {
                 path='/operator/dashboard'
                 element={
                   <ProtectedRoute allowedRoles={["operator"]}>
-                    <OperatorDashboardPage />
+                    <TenantDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              {/* <Route
+                path='/tenant/analytics'
+                element={
+                  <ProtectedRoute allowedRoles={["tenant_admin"]}>
+                    <AnalyticsDashboardPage />
+                  </ProtectedRoute>
+                }
+              /> */}
+              <Route
+                path='/operator/settings'
+                element={
+                  <ProtectedRoute allowedRoles={["operator"]}>
+                    <SettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/operator/buses'
+                element={
+                  <ProtectedRoute allowedRoles={["operator"]}>
+                    <BusesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/operator/routes'
+                element={
+                  <ProtectedRoute allowedRoles={["operator"]}>
+                    <BusRouteManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/operator/transaction-history'
+                element={
+                  <ProtectedRoute allowedRoles={["operator"]}>
+                    <TransactionHistoryPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/operator/feedbacks'
+                element={
+                  <ProtectedRoute allowedRoles={["operator"]}>
+                    <Feedbacks
+                      params={{ routeId: "682f994203b5302e980b2de4" }}
+                    />
                   </ProtectedRoute>
                 }
               />
             </Route>
 
             {/* Fallback route */}
-            <Route path='*' element={<Navigate to='/' replace />} />
+            {/* <Route path='*' element={<Navigate to='/' replace />} /> */}
           </Routes>
           <Toaster />
         </TooltipProvider>

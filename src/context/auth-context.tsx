@@ -1,8 +1,7 @@
 "use client";
-"use client";
 
 import type React from "react";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -19,6 +18,7 @@ export interface User {
   email: string;
   role: UserRole;
   // password?: string
+  tenantId?: string; // Optional for operators
   companyName: string;
   branch?: string;
   avatar?: string;
@@ -31,6 +31,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>; // Fix parameters
   signup: (userData: SignupData) => Promise<void>;
+  
   logout: () => void;
 }
 
@@ -54,25 +55,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   // Check for stored user on mount
-  // useEffect(() => {
-  //   const storedUser = localStorage.getItem("user");
-  //   const token = localStorage.getItem("token");
-  //   const tenantId = localStorage.getItem("tenantId");
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
+    //store route id
+    const routeId = localStorage.getItem("routeId");
+    // const tenantId = localStorage.getItem("tenantId");
 
-  //   if (storedUser && token) {
-  //     // Verify token is still valid (in a real app, you'd call an API endpoint)
-  //     setAdmin(JSON.parse(storedUser));
-  //   }
-  //   setIsLoading(false);
-  // }, []);
+    if (storedUser && token) {
+      // Verify token is still valid (in a real app, you'd call an API endpoint)
+      setAdmin(JSON.parse(storedUser));
+    }
+    setIsLoading(false);
+  }, []);
 
   // Login function
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
       // remove every token from localStorage
+
+      //? incase
       localStorage.removeItem("token");
       localStorage.removeItem("tenantId");
+
+
       // 1. Verify user credentials
       // const userResponse = await axios.get(
       //   `/users?email=${email}&password=${password}`

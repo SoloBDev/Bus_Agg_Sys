@@ -13,9 +13,9 @@ export default function HomePage() {
             <Link to="/login">
               <Button variant="outline">Log in</Button>
             </Link>
-            <Link to="/signup">
+            {/* <Link to="/signup">
               <Button>Sign up</Button>
-            </Link>
+            </Link> */}
           </div>
         </div>
       </header>
