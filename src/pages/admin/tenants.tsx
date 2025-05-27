@@ -38,8 +38,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -52,10 +50,30 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useTenantStore, type Tenant } from "@/lib/tenant-store";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TenantsPageProps {
   activeTab?: string;
 }
+
+const LoadingRow = () => (
+  <TableRow>
+    <TableCell>
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-10 w-10 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-[120px]" />
+          <Skeleton className="h-3 w-[80px]" />
+        </div>
+      </div>
+    </TableCell>
+    <TableCell><Skeleton className="h-4 w-[60px]" /></TableCell>
+    <TableCell><Skeleton className="h-4 w-[60px]" /></TableCell>
+    <TableCell><Skeleton className="h-4 w-[60px]" /></TableCell>
+    <TableCell><Skeleton className="h-4 w-[60px]" /></TableCell>
+    <TableCell><Skeleton className="h-4 w-[30px] ml-auto" /></TableCell>
+  </TableRow>
+);
 
 export default function TenantsPage({
   activeTab = "all-tenants",
@@ -162,9 +180,11 @@ export default function TenantsPage({
     }
   };
 
-  useEffect(()=> {
+  useEffect(() => {
     fetchTenants();
-  }, [])
+  }, []);
+
+
 
   return (
     <>
@@ -269,7 +289,6 @@ export default function TenantsPage({
                         <TableRow>
                           <TableHead>Tenant</TableHead>
                           <TableHead>Status</TableHead>
-                          <TableHead>Routes</TableHead>
                           <TableHead>Buses</TableHead>
                           <TableHead>Revenue</TableHead>
                           <TableHead>Join Date</TableHead>
@@ -277,10 +296,27 @@ export default function TenantsPage({
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredTenants.length === 0 ? (
+                        {isLoading ? (
+                          <>
+                            <LoadingRow />
+                            <LoadingRow />
+                            <LoadingRow />
+                            <LoadingRow />
+                            <LoadingRow />
+                          </>
+                        ) : error ? (
                           <TableRow>
                             <TableCell
-                              colSpan={7}
+                              colSpan={6}
+                              className='text-center py-8 text-red-500'
+                            >
+                              Error loading tenants: {error}
+                            </TableCell>
+                          </TableRow>
+                        ) : filteredTenants.length === 0 ? (
+                          <TableRow>
+                            <TableCell
+                              colSpan={6}
                               className='text-center py-8 text-muted-foreground'
                             >
                               No tenants found matching your criteria
@@ -319,9 +355,8 @@ export default function TenantsPage({
                                     tenant.status.slice(1)}
                                 </Badge>
                               </TableCell>
-                              <TableCell>{tenant.routes}</TableCell>
-                              <TableCell>{tenant.buses}</TableCell>
-                              <TableCell>{tenant.revenue}</TableCell>
+                              <TableCell>{tenant.numBuses}</TableCell>
+                              <TableCell>{tenant.totalRevenue}</TableCell>
                               <TableCell>{tenant.joinDate || "N/A"}</TableCell>
                               <TableCell className='text-right'>
                                 <DropdownMenu>
@@ -409,7 +444,6 @@ export default function TenantsPage({
                       <TableHeader>
                         <TableRow>
                           <TableHead>Tenant</TableHead>
-                          <TableHead>Routes</TableHead>
                           <TableHead>Buses</TableHead>
                           <TableHead>Revenue</TableHead>
                           <TableHead>Operators</TableHead>
@@ -440,9 +474,8 @@ export default function TenantsPage({
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell>{tenant.routes}</TableCell>
-                            <TableCell>{tenant.buses}</TableCell>
-                            <TableCell>{tenant.revenue}</TableCell>
+                            <TableCell>{tenant.numBuses}</TableCell>
+                            <TableCell>{tenant.totalRevenue}</TableCell>
                             <TableCell>{tenant.operators}</TableCell>
                             <TableCell className='text-right'>
                               <DropdownMenu>
@@ -678,7 +711,7 @@ export default function TenantsPage({
       </div>
 
       {/* Tenant Details Dialog */}
-    { isLoading &&(
+      {/* { isLoading &&(
       <div className='flex items-center justify-center h-full'>
         <p className='text-muted-foreground'>Loading tenants...</p>
       </div>
@@ -688,136 +721,165 @@ export default function TenantsPage({
         <div className='flex items-center justify-center h-full'>
           <p className='text-red-600'>{error}</p>
         </div>
-      )}
-      { !isLoading && !error &&(
-        <Dialog open={isTenantDetailsOpen} onOpenChange={setIsTenantDetailsOpen}>
-        <DialogContent className='sm:max-w-[600px]'>
-          <DialogHeader>
-            <DialogTitle>Tenant Details</DialogTitle>
-          </DialogHeader>
-          {selectedTenant && (
-            <div className='space-y-4'>
-              <div className='flex items-center gap-4'>
-                <Avatar className='h-16 w-16'>
-                  <AvatarImage
-                    src={selectedTenant.logo || "/placeholder.svg"}
-                    alt={selectedTenant.busBrandName}
-                  />
-                  <AvatarFallback>
-                    {selectedTenant.busBrandName.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h2 className='text-xl font-bold'>
-                    {selectedTenant.busBrandName}
-                  </h2>
-                  <p className='text-muted-foreground'>
-                    {selectedTenant.contactEmail}
-                  </p>
+      )} */}
+      {
+        <Dialog
+          open={isTenantDetailsOpen}
+          onOpenChange={setIsTenantDetailsOpen}
+        >
+          <DialogContent className='sm:max-w-[600px]'>
+            {isLoading ? (
+              <div className='space-y-4'>
+                <Skeleton className='h-8 w-[200px]' />
+                <div className='flex items-center gap-4'>
+                  <Skeleton className='h-16 w-16 rounded-full' />
+                  <div className='space-y-2'>
+                    <Skeleton className='h-6 w-[180px]' />
+                    <Skeleton className='h-4 w-[120px]' />
+                  </div>
+                  <Skeleton className='h-6 w-[80px] ml-auto' />
                 </div>
-                <Badge
-                  variant='outline'
-                  className={`${getStatusBadge(selectedTenant.status)} ml-auto`}
-                >
-                  {selectedTenant.status.charAt(0).toUpperCase() +
-                    selectedTenant.status.slice(1)}
-                </Badge>
-              </div>
-
-              <div className='grid grid-cols-2 gap-4'>
-                <div>
-                  <h3 className='text-sm font-medium text-muted-foreground'>
-                    Admin
-                  </h3>
-                  <p>{selectedTenant.operatorName}</p>
+                <div className='grid grid-cols-2 gap-4'>
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className='space-y-2'>
+                      <Skeleton className='h-4 w-[80px]' />
+                      <Skeleton className='h-4 w-[120px]' />
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <h3 className='text-sm font-medium text-muted-foreground'>
-                    Registration Date
-                  </h3>
-                  <p>{selectedTenant.registrationDate}</p>
-                </div>
-                <div>
-                  <h3 className='text-sm font-medium text-muted-foreground'>
-                    Routes
-                  </h3>
-                  <p>{selectedTenant.routes}</p>
-                </div>
-                <div>
-                  <h3 className='text-sm font-medium text-muted-foreground'>
-                    Buses
-                  </h3>
-                  <p>{selectedTenant.buses}</p>
-                </div>
-                <div>
-                  <h3 className='text-sm font-medium text-muted-foreground'>
-                    Revenue
-                  </h3>
-                  <p>{selectedTenant.revenue}</p>
-                </div>
-                <div>
-                  <h3 className='text-sm font-medium text-muted-foreground'>
-                    Operators
-                  </h3>
-                  <p>{selectedTenant.operators}</p>
+                <div className='flex gap-2 pt-4'>
+                  <Skeleton className='h-10 flex-1' />
+                  <Skeleton className='h-10 flex-1' />
                 </div>
               </div>
+            ) : error ? (
+              <div className='text-red-500'>Error: {error}</div>
+            ) : selectedTenant ? (
+              <div className='space-y-4'>
+                <div className='flex items-center gap-4'>
+                  <Avatar className='h-16 w-16'>
+                    <AvatarImage
+                      src={selectedTenant.logo || "/placeholder.svg"}
+                      alt={selectedTenant.busBrandName}
+                    />
+                    <AvatarFallback>
+                      {selectedTenant.busBrandName.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h2 className='text-xl font-bold'>
+                      {selectedTenant.busBrandName}
+                    </h2>
+                    <p className='text-muted-foreground'>
+                      {selectedTenant.contactEmail}
+                    </p>
+                  </div>
+                  <Badge
+                    variant='outline'
+                    className={`${getStatusBadge(
+                      selectedTenant.status
+                    )} ml-auto`}
+                  >
+                    {selectedTenant.status.charAt(0).toUpperCase() +
+                      selectedTenant.status.slice(1)}
+                  </Badge>
+                </div>
 
-              <div className='border-t pt-4'>
-                <h3 className='font-medium mb-2'>Actions</h3>
-                <div className='flex gap-2'>
-                  {selectedTenant.status === "pending" && (
-                    <>
-                      <Button
-                        variant='default'
-                        className='flex-1'
-                        onClick={() => {
-                          handleApproveTenant(selectedTenant.id);
-                          setIsTenantDetailsOpen(false);
-                        }}
-                      >
-                        Approve
-                      </Button>
+                <div className='grid grid-cols-2 gap-4'>
+                  <div>
+                    <h3 className='text-sm font-medium text-muted-foreground'>
+                      Admin
+                    </h3>
+                    <p>{selectedTenant.operatorName}</p>
+                  </div>
+                  <div>
+                    <h3 className='text-sm font-medium text-muted-foreground'>
+                      Registration Date
+                    </h3>
+                    <p>{selectedTenant.registrationDate}</p>
+                  </div>
+                  <div>
+                    <h3 className='text-sm font-medium text-muted-foreground'>
+                      Routes
+                    </h3>
+                    <p>{selectedTenant.routes}</p>
+                  </div>
+                  <div>
+                    <h3 className='text-sm font-medium text-muted-foreground'>
+                      Buses
+                    </h3>
+                    <p>{selectedTenant.numBuses}</p>
+                  </div>
+                  <div>
+                    <h3 className='text-sm font-medium text-muted-foreground'>
+                      Revenue
+                    </h3>
+                    <p>{selectedTenant.totalRevenue}</p>
+                  </div>
+                  <div>
+                    <h3 className='text-sm font-medium text-muted-foreground'>
+                      Operators
+                    </h3>
+                    <p>{selectedTenant.operators}</p>
+                  </div>
+                </div>
+
+                <div className='border-t pt-4'>
+                  <h3 className='font-medium mb-2'>Actions</h3>
+                  <div className='flex gap-2'>
+                    {selectedTenant.status === "pending" && (
+                      <>
+                        <Button
+                          variant='default'
+                          className='flex-1'
+                          onClick={() => {
+                            handleApproveTenant(selectedTenant.id);
+                            setIsTenantDetailsOpen(false);
+                          }}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          variant='outline'
+                          className='flex-1'
+                          onClick={() => {
+                            handleRejectTenant(selectedTenant.id);
+                            setIsTenantDetailsOpen(false);
+                          }}
+                        >
+                          Reject
+                        </Button>
+                      </>
+                    )}
+                    {selectedTenant.status === "active" && (
                       <Button
                         variant='outline'
                         className='flex-1'
                         onClick={() => {
-                          handleRejectTenant(selectedTenant.id);
+                          handleSuspendTenant(selectedTenant.id);
                           setIsTenantDetailsOpen(false);
                         }}
                       >
-                        Reject
+                        Suspend
                       </Button>
-                    </>
-                  )}
-                  {selectedTenant.status === "active" && (
+                    )}
                     <Button
-                      variant='outline'
+                      variant='destructive'
                       className='flex-1'
                       onClick={() => {
-                        handleSuspendTenant(selectedTenant.id);
+                        handleDeleteTenant(selectedTenant.id);
                         setIsTenantDetailsOpen(false);
                       }}
                     >
-                      Suspend
+                      Delete
                     </Button>
-                  )}
-                  <Button
-                    variant='destructive'
-                    className='flex-1'
-                    onClick={() => {
-                      handleDeleteTenant(selectedTenant.id);
-                      setIsTenantDetailsOpen(false);
-                    }}
-                  >
-                    Delete
-                  </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>)}
+            ) : null}
+          </DialogContent>
+        </Dialog>
+      }
     </>
   );
 }

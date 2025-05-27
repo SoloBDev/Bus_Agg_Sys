@@ -14,7 +14,7 @@ export default function AdminDashboardPage() {
       <div className="flex flex-col">
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-6">
           <div className="flex flex-1 items-center gap-4">
-            <h1 className="text-xl font-semibold">System Administrator Dashboard</h1>
+            <h1 className="!text-2xl font-semibold">System Administrator Dashboard</h1>
           </div>
           <div className="flex items-center gap-4">
             <Button variant="outline" size="sm">

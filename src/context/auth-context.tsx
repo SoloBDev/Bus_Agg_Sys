@@ -2,7 +2,7 @@
 "use client";
 
 import type React from "react";
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -19,7 +19,7 @@ export interface User {
   email: string;
   role: UserRole;
   // password?: string
-  companyName?: string;
+  companyName: string;
   branch?: string;
   avatar?: string;
   status: "active" | "pending" | "suspended";
@@ -54,21 +54,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   // Check for stored user on mount
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
+  // useEffect(() => {
+  //   const storedUser = localStorage.getItem("user");
+  //   const token = localStorage.getItem("token");
+  //   const tenantId = localStorage.getItem("tenantId");
 
-    if (storedUser && token) {
-      // Verify token is still valid (in a real app, you'd call an API endpoint)
-      setAdmin(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
-  }, []);
+  //   if (storedUser && token) {
+  //     // Verify token is still valid (in a real app, you'd call an API endpoint)
+  //     setAdmin(JSON.parse(storedUser));
+  //   }
+  //   setIsLoading(false);
+  // }, []);
 
   // Login function
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      // remove every token from localStorage
+      localStorage.removeItem("token");
+      localStorage.removeItem("tenantId");
       // 1. Verify user credentials
       // const userResponse = await axios.get(
       //   `/users?email=${email}&password=${password}`
@@ -86,15 +90,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           password,
         }
       );
-      if (authResponse.data.status && authResponse.data.user.role !== "system_admin") {
+      console.log("authResponse", authResponse.data);
+      if (
+        authResponse.data.status &&
+        authResponse.data.user.role !== "system_admin"
+      ) {
         if (authResponse.data.status === "pending") {
-          navigate("/pending-approval");
+          console.log("here");
+          await navigate("/pending-approval");
           throw new Error("Your account is pending admin approval");
         }
 
         if (authResponse.data.status === "suspended") {
           throw new Error(
-            "Account suspended. Please contact support@example.com"
+            "Account suspended. Please contact support@addisbus.com"
           );
         }
       }
@@ -112,11 +121,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = authResponse.data.token;
       const success = authResponse.data.success;
       const user = authResponse.data.user;
+      const tenantId = authResponse.data.user.tenantId;
 
       setAdmin(user);
       // localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", token);
       localStorage.setItem("success", success);
+      localStorage.setItem("tenantId", tenantId || "");
 
       // 4. Redirect based on role
       const redirectPath = {
@@ -128,8 +139,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       navigate(redirectPath);
     } catch (error) {
       console.error("Login failed:", error);
+      // if error is instance of AxiosError, extract message
+      if (axios.isAxiosError(error)) {
+        const errorResponse = error.response;
+
+        if (errorResponse && errorResponse.data && errorResponse.data.status) {
+          if (errorResponse.data.status === "pending") {
+            await navigate("/pending-approval");
+            // throw new Error("Your account is pending admin approval");
+          }
+
+          if (errorResponse.data.status === "suspended") {
+            throw new Error(
+              "Account suspended. Please contact support@addisbus.com"
+            );
+          }
+        }
+        // if (authResponse.data.success === false) {
+        //   throw new Error("Authentication failed");
+        // }
+      }
       localStorage.removeItem("user");
       localStorage.removeItem("token");
+      localStorage.removeItem("tenantId");
       throw error;
     } finally {
       setIsLoading(false);
@@ -182,6 +214,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAdmin(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+    localStorage.removeItem("tenantId");
     navigate("/login");
   };
 

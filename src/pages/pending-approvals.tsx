@@ -18,7 +18,7 @@ export default function PendingApprovalPage() {
   }, [user, navigate])
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center min-h-screen mx-auto">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="flex justify-center">
