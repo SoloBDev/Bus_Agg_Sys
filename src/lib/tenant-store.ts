@@ -20,8 +20,8 @@ export interface Tenant {
   phone: string;
   status: "pending" | "active" | "suspended";
   routes: number;
-  numBuses: number;
-  totalRevenue: string;
+  buses: number;
+  revenue: string;
   joinDate: string;
   registrationDate: string;
   operators: number;
@@ -70,7 +70,7 @@ export const useTenantStore = create<TenantStore>()(
       fetchTenants: async () => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axios.get(`${API_BASE_URL}/get-all/stats`, {
+          const response = await axios.get(`${API_BASE_URL}`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
@@ -78,7 +78,7 @@ export const useTenantStore = create<TenantStore>()(
           console.log(response.data);
 
           set({
-            tenants: response.data.data.map((tenant: any) => ({
+            tenants: response.data.busTenants.map((tenant: any) => ({
               ...tenant,
               id: tenant._id || tenant.id, // Map _id to id for compatibility
             })),
